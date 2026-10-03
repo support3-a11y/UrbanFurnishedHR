@@ -115,6 +115,20 @@
   }
   .modal { position: fixed; inset: 0; background: rgba(10,20,35,0.55); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
   .modal-card { background: var(--card); border-radius: 6px; padding: 20px; max-width: 380px; width: 100%; box-shadow: 0 14px 34px var(--shadow); }
+  #cardReportTable td:last-child, #cardReportTable th:last-child { text-align: right; }
+  #rbTable td.amount { text-align: right; white-space: nowrap; }
+  .total-row + .total-row td { border-top: 1px solid var(--rule); }
+  .rule-note { font-size: 11.5px; color: var(--muted); margin: 0 0 16px; }
+  .slot { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0 2px; margin-top: 8px; border-top: 1px solid var(--rule); }
+  .slot-label { width: 64px; flex: none; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); padding-top: 4px; }
+  .slot-body { flex: 1; }
+  #ptoPending, #hoPending { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--muted); }
+  .chip { font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+  .chip.card { background: #E4EAF3; color: #1F4C89; }
+  .chip.warn { background: var(--denied-bg); color: var(--denied-text); }
+  .link-btn { background: none; border: none; padding: 0; margin-right: 8px; color: var(--brand); cursor: pointer; font-size: 12px; text-decoration: underline; font-family: inherit; }
+  .link-btn.danger { color: var(--red); }
+  input[type="file"] { font-size: 12px; width: 100%; font-family: inherit; }
 </style>
 </head>
 <body>
@@ -158,19 +172,31 @@
       <button class="tab" data-tab="paycalc">Pay Calculator</button>
       <button class="tab" data-tab="office">Office Info</button>
       <button class="tab" data-tab="team" id="teamTabBtn" style="display:none;">Team</button>
-      <button class="tab" data-tab="reimb" id="reimbTabBtn" style="display:none;">Reimbursements</button>
+      <button class="tab" data-tab="reimb" id="reimbTabBtn" style="display:none;">Expenses</button>
       <button class="tab" data-tab="reports" id="reportsTabBtn" style="display:none;">Reports</button>
     </div>
 
     <!-- TAB: PTO -->
     <div class="panel active" id="panel-pto">
+      <p class="section-label">PTO · <span id="balYearPto"></span></p>
       <div class="pto-balance">
         <div class="pto-stat"><div class="num" id="ptoAllotted">—</div><div class="lbl">ALLOTTED</div></div>
         <div class="pto-stat"><div class="num" id="ptoUsed">—</div><div class="lbl">USED</div></div>
         <div class="pto-stat"><div class="num" id="ptoLeft">—</div><div class="lbl">REMAINING</div></div>
       </div>
+      <p class="sub" id="ptoPending" style="margin:-10px 0 4px;"></p>
+      <p class="rule-note">Up to 5 unused PTO days can roll over into the next year.</p>
+      <p class="section-label">HOME OFFICE · <span id="balYearHo"></span></p>
+      <div class="pto-balance">
+        <div class="pto-stat"><div class="num" id="hoAllotted">—</div><div class="lbl">ALLOTTED</div></div>
+        <div class="pto-stat"><div class="num" id="hoUsed">—</div><div class="lbl">USED</div></div>
+        <div class="pto-stat"><div class="num" id="hoLeft">—</div><div class="lbl">REMAINING</div></div>
+      </div>
+      <p class="sub" id="hoPending" style="margin:-10px 0 4px;"></p>
+      <p class="rule-note">Home Office days do not roll over: unused days are lost on December 31.</p>
 
       <p class="section-label">REQUEST TIME OFF</p>
+      <p class="rule-note">Your team leader decides how many days each approved request deducts, for example after taking holidays inside the range into account.</p>
       <div class="field-row">
         <label for="reqType">Type</label>
         <select id="reqType"><option value="pto">PTO</option><option value="home_office">Home Office</option></select>
@@ -223,20 +249,34 @@
       <div id="myExtrasList"><p class="empty">Loading…</p></div>
     </div>
 
-    <!-- TAB: Pay Calculator (everyone — calculates their own pay) -->
+    <!-- TAB: Pay Calculator (private: runs only in the browser) -->
     <div class="panel" id="panel-paycalc">
-      <p class="admin-note">Pulls your logged Extra Days/Hours and your own Reimbursements for the month automatically. Base Pay is set by your Team Leader.</p>
+      <p class="admin-note">Private calculator. What you type here stays on your screen: nothing is saved or sent to the server, and nobody else can see it.</p>
+
+      <p class="section-label">YOU</p>
       <div class="field-grid">
-        <div class="field-row">
-          <label for="pcMonth">Month</label>
-          <select id="pcMonth"></select>
-        </div>
+        <div class="field-row"><label for="pcTeam">Team</label><select id="pcTeam"><option value="support">Support</option><option value="sales">Sales</option></select></div>
+        <div class="field-row"><label for="pcBase">Monthly Base Pay (USD)</label><input type="number" id="pcBase" min="0" step="0.01" value="0" inputmode="decimal"></div>
+      </div>
+
+      <p class="section-label">HOURS &amp; SHIFTS THIS MONTH</p>
+      <div class="field-grid">
+        <div class="field-row"><label for="pcDays">Extra Days</label><input type="number" id="pcDays" min="0" step="1" value="0" inputmode="numeric"></div>
+        <div class="field-row"><label for="pcHero">Hero Shifts</label><input type="number" id="pcHero" min="0" step="1" value="0" inputmode="numeric"></div>
+        <div class="field-row"><label for="pcH10">Extra Hours (1.0x)</label><input type="number" id="pcH10" min="0" step="0.5" value="0" inputmode="decimal"></div>
+        <div class="field-row"><label for="pcH15">Extra Hours (1.5x)</label><input type="number" id="pcH15" min="0" step="0.5" value="0" inputmode="decimal"></div>
+      </div>
+      <div class="field-grid">
+        <div class="field-row"><label for="pcMonth">Month</label><select id="pcMonth"></select></div>
         <div class="field-row"><label for="pcYear">Year</label><input type="number" id="pcYear" value="2026" step="1"></div>
       </div>
-      <button class="btn" id="pcLoadBtn">Load This Month</button>
+      <button class="btn ghost" id="pcLoadBtn">Fill from my logged extras</button>
       <p class="msg" id="pcMsg"></p>
 
-      <div id="pcCleaningRow" class="hidden" style="margin-top:14px;">
+      <p class="section-label">REIMBURSEMENTS</p>
+      <div class="field-row"><label for="pcReimb">Reimbursement (USD)</label><input type="number" id="pcReimb" min="0" step="0.01" value="0" inputmode="decimal"></div>
+
+      <div id="pcCleaningRow" class="hidden">
         <p class="section-label">CLEANING SUBSCRIPTION SPLIT (5%, SALES ONLY)</p>
         <div class="field-grid">
           <div class="field-row"><label for="pcCleaningTotal">Subscription Total (USD)</label><input type="number" id="pcCleaningTotal" min="0" step="0.01" value="0"></div>
@@ -244,12 +284,12 @@
         </div>
       </div>
 
-      <p class="section-label" style="margin-top:14px;">BONUS (VARIABLE)</p>
-      <div class="field-row"><label for="pcBonus">Bonus (USD)</label><input type="number" id="pcBonus" min="0" step="0.01" value="0"></div>
+      <p class="section-label">BONUS (VARIABLE)</p>
+      <div class="field-row"><label for="pcBonus">Bonus (USD)</label><input type="number" id="pcBonus" min="0" step="0.01" value="0" inputmode="decimal"></div>
 
-      <div class="rule-line" style="border-top:1px dashed var(--rule-strong); margin:16px 0;"></div>
+      <div style="border-top:1px dashed var(--rule-strong); margin:16px 0;"></div>
 
-      <div id="pcBreakdown" class="hidden">
+      <div id="pcBreakdown">
         <p class="section-label">RATES</p>
         <div class="line"><span class="label">Regular Hourly Rate</span><span class="value" id="pcOutRate">$0.00</span></div>
         <div class="line"><span class="label">Overtime Rate (1.5x)</span><span class="value" id="pcOutOTRate">$0.00</span></div>
@@ -288,6 +328,9 @@
       <p class="section-label">PENDING APPROVALS</p>
       <div id="pendingList"><p class="empty">Loading…</p></div>
 
+      <p class="section-label">RECENTLY DECIDED</p>
+      <div id="decidedList"><p class="empty">Loading…</p></div>
+
       <p class="section-label">ADD A PERSON</p>
       <div class="field-grid">
         <div class="field-row"><label for="tpName">Name</label><input type="text" id="tpName"></div>
@@ -298,25 +341,31 @@
         <div class="field-row"><label for="tpTeam">Team</label><select id="tpTeam"><option value="support">Support</option><option value="sales">Sales</option></select></div>
       </div>
       <div class="field-row"><label for="tpRole">Role</label><select id="tpRole"><option value="member">Member</option><option value="leader">Team Leader</option></select></div>
+      <div class="field-grid">
+        <div class="field-row"><label for="tpPto">PTO days per year</label><input type="number" id="tpPto" value="15" min="0"></div>
+        <div class="field-row"><label for="tpHo">Home Office days per year</label><input type="number" id="tpHo" value="21" min="0"></div>
+      </div>
       <button class="btn" id="tpAddBtn">Create account</button>
       <p class="msg" id="tpMsg"></p>
 
       <p class="section-label">TEAM MEMBERS</p>
+      <p class="rule-note">Each January, add the PTO days a person carries over from last year (up to 5) to their PTO days. Home Office days never carry over.</p>
       <div id="teamList"><p class="empty">Loading…</p></div>
     </div>
 
     <!-- TAB: Reimbursements (leaders only, server-enforced) -->
     <div class="panel" id="panel-reimb">
-      <p class="section-label">LOG A REIMBURSEMENT</p>
+      <p class="section-label">LOG AN EXPENSE</p>
       <div class="field-row">
-        <label for="rbMember">Member</label>
-        <select id="rbMember"></select>
+        <label for="rbType">Type</label>
+        <select id="rbType">
+          <option value="reimbursable">Reimbursable (a person paid; the company owes them)</option>
+          <option value="company_card">Company card (not reimbursable)</option>
+        </select>
       </div>
+      <div class="field-row"><label for="rbMember" id="rbMemberLabel">Person</label><select id="rbMember"></select></div>
       <div class="field-grid">
-        <div class="field-row">
-          <label for="rbMonth">Month</label>
-          <select id="rbMonth"></select>
-        </div>
+        <div class="field-row"><label for="rbMonth">Month</label><select id="rbMonth"></select></div>
         <div class="field-row"><label for="rbYear">Year</label><input type="number" id="rbYear" value="2026" step="1"></div>
       </div>
       <div class="field-grid">
@@ -330,14 +379,15 @@
         <div class="field-row"><label for="rbAmount">Amount (USD)</label><input type="number" id="rbAmount" min="0" step="0.01" value="0"></div>
       </div>
       <div class="field-row"><label for="rbNote">Note</label><input type="text" id="rbNote"></div>
-      <button class="btn" id="rbSubmitBtn">Log Reimbursement</button>
+      <div class="field-row"><label for="rbFile">Ticket: photo or PDF (optional)</label><input type="file" id="rbFile" accept="image/*,application/pdf"></div>
+      <button class="btn" id="rbSubmitBtn">Log expense</button>
       <p class="msg" id="rbMsg"></p>
 
-      <p class="section-label">LOGGED REIMBURSEMENTS</p>
+      <p class="section-label">LOGGED EXPENSES</p>
       <div style="overflow-x:auto;">
         <table id="rbTable">
-          <thead><tr><th>Member</th><th>Month</th><th>Category</th><th>Amount</th></tr></thead>
-          <tbody id="rbTableBody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+          <thead><tr><th>Person</th><th>Month</th><th>Type</th><th>Category</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="rbTableBody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -371,13 +421,26 @@
 
       <div id="reimbReportBlock" class="report-block hidden">
         <div class="report-head">
-          <p class="section-label" style="margin:0;">REIMBURSEMENTS REPORT — <span id="reimbReportMonth"></span></p>
+          <p class="section-label" style="margin:0;">REIMBURSABLE EXPENSES — <span id="reimbReportMonth"></span></p>
           <button class="btn ghost small" id="printReimbBtn">Print</button>
         </div>
         <div style="overflow-x:auto;">
           <table id="reimbReportTable">
-            <thead><tr><th>Member</th><th>Category</th><th>Note</th><th>Amount</th></tr></thead>
+            <thead><tr><th>Person</th><th>Category</th><th>Note</th><th>Ticket</th><th>Amount</th></tr></thead>
             <tbody id="reimbReportBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="cardReportBlock" class="report-block hidden">
+        <div class="report-head">
+          <p class="section-label" style="margin:0;">COMPANY CARD PURCHASES (NOT REIMBURSABLE) — <span id="cardReportMonth"></span></p>
+          <button class="btn ghost small" id="printCardBtn">Print</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="cardReportTable">
+            <thead><tr><th>Person</th><th>Category</th><th>Note</th><th>Ticket</th><th>Amount</th></tr></thead>
+            <tbody id="cardReportBody"></tbody>
           </table>
         </div>
       </div>
@@ -404,11 +467,12 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
 const POLL_MS = 90000;
+const MAX_TICKET_BYTES = 5 * 1024 * 1024;
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const US_HOLIDAYS = [
   { date: "2026-01-01", name: "New Year's Day" },
@@ -425,11 +489,12 @@ const US_HOLIDAYS = [
   { date: "2026-12-25", name: "Christmas Day" },
   { date: "2026-12-31", name: "New Year's Eve" },
 ];
+const KIND_LABEL = { pto: "PTO", home_office: "Home Office" };
 
 const $ = (id) => document.getElementById(id);
 let token = null, me = null, isLeader = false;
-let users = [], usersById = {}, requests = [], myExtras = [], reimbs = [], officeText = "";
-let pollTimer = null;
+let users = [], usersById = {}, requests = [], myExtras = [], expenses = [], officeText = "";
+let pollTimer = null, pcTeamInit = false;
 
 // ---------- helpers ----------
 function esc(s) {
@@ -444,11 +509,16 @@ function fmtDate(iso) {
   if (!iso) return "";
   return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
-function businessDays(start, end) {
+// Business days between two ISO dates, optionally counting only those inside one calendar year.
+function bdInYear(start, end, year) {
   let count = 0;
   const d = new Date(start + "T00:00:00");
   const endD = new Date(end + "T00:00:00");
-  while (d <= endD) { const wd = d.getDay(); if (wd !== 0 && wd !== 6) count++; d.setDate(d.getDate() + 1); }
+  while (d <= endD) {
+    const wd = d.getDay();
+    if (wd !== 0 && wd !== 6 && (year === undefined || d.getFullYear() === year)) count++;
+    d.setDate(d.getDate() + 1);
+  }
   return count;
 }
 function badgeHtml(status) {
@@ -474,6 +544,32 @@ async function withBtn(btn, fn) {
   sel.innerHTML = MONTHS.map((m) => `<option>${m}</option>`).join("");
   sel.value = MONTHS[new Date().getMonth()];
 });
+
+["exYear", "rbYear", "repYear", "pcYear"].forEach((id) => { $(id).value = new Date().getFullYear(); });
+
+// ---------- balances (PTO and Home Office are counted separately, per calendar year) ----------
+function fmtDays(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
+function autoDays(r) { return bdInYear(r.startDate, r.endDate); }          // Monday to Friday count: only a suggestion
+function reqYear(r) { return Number(r.startDate.slice(0, 4)); }             // a request counts toward the year it starts in
+function chargedDays(r) { return r.daysCharged >= 0 ? r.daysCharged : autoDays(r); } // the team leader's number when set
+function daysLabel(r) {
+  if (r.status === "approved") { const d = chargedDays(r); return `${fmtDays(d)} day${d === 1 ? "" : "s"} deducted`; }
+  if (r.status === "denied") return "not approved";
+  const a = autoDays(r);
+  return `about ${a} weekday${a === 1 ? "" : "s"}; your team leader confirms the days`;
+}
+// Approved requests count the days the team leader set; pending ones show a weekday estimate.
+function daysUsed(uid, kind, year, status) {
+  return requests
+    .filter((r) => r.requesterId === uid && r.kind === kind && r.status === status && reqYear(r) === year)
+    .reduce((sum, r) => sum + (status === "approved" ? chargedDays(r) : autoDays(r)), 0);
+}
+function balance(u, kind, year) {
+  const allot = kind === "pto" ? u.ptoAllotment : u.homeOfficeAllotment;
+  const used = daysUsed(u.id, kind, year, "approved");
+  const pending = daysUsed(u.id, kind, year, "pending");
+  return { allot, used, pending, left: Math.max(allot - used, 0) };
+}
 
 // ---------- API ----------
 async function api(action, payload) {
@@ -506,6 +602,7 @@ function showAuth(message) {
   token = null; me = null; isLeader = false;
   try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
   stopPolling();
+  clearPayCalc(); // never leave one person's numbers on screen for the next person
   activateTab("pto");
   $("authBox").classList.remove("hidden");
   $("mainApp").classList.add("hidden");
@@ -569,7 +666,7 @@ async function sync(force) {
   users.forEach((u) => { usersById[u.id] = u; });
   requests = d.requests;
   myExtras = d.myExtras;
-  reimbs = d.reimbursements || [];
+  expenses = d.expenses || [];
   officeText = d.office || "";
   renderAll(!!force);
 }
@@ -580,14 +677,16 @@ function renderAll(force) {
   $("officeEditBtn").classList.toggle("hidden", !isLeader);
   const activeTab = document.querySelector(".tab.active");
   if (!isLeader && activeTab && ["team", "reimb", "reports"].indexOf(activeTab.dataset.tab) >= 0) activateTab("pto");
+  if (!pcTeamInit) { $("pcTeam").value = me.team || "support"; pcTeamInit = true; calculatePay(); }
   populateMemberSelect();
   renderPtoStats();
   renderMyRequests();
   renderHeroShiftList();
-  renderPending();
+  renderPending(force);
+  renderDecided();
   renderTeamList(force);
   renderMyExtras();
-  renderReimbTable();
+  renderExpenses();
   renderOffice();
 }
 
@@ -617,25 +716,33 @@ $("pwSaveBtn").addEventListener("click", () => withBtn($("pwSaveBtn"), async () 
   } catch (e) { setMsg($("pwMsg"), e.message, "error"); }
 }));
 
-// ---------- PTO ----------
+// ---------- PTO / Home Office ----------
 function renderPtoStats() {
-  const allotted = me.ptoAllotment == null ? 15 : me.ptoAllotment;
-  const used = requests
-    .filter((r) => r.requesterId === me.id && r.kind === "pto" && r.status === "approved")
-    .reduce((sum, r) => sum + businessDays(r.startDate, r.endDate), 0);
-  $("ptoAllotted").textContent = allotted;
-  $("ptoUsed").textContent = used;
-  $("ptoLeft").textContent = Math.max(allotted - used, 0);
+  const year = new Date().getFullYear();
+  $("balYearPto").textContent = year;
+  $("balYearHo").textContent = year;
+  [["pto", "pto"], ["home_office", "ho"]].forEach(([kind, pre]) => {
+    const b = balance(me, kind, year);
+    $(pre + "Allotted").textContent = fmtDays(b.allot);
+    $(pre + "Used").textContent = fmtDays(b.used);
+    $(pre + "Left").textContent = fmtDays(b.left);
+    $(pre + "Pending").textContent = b.pending ? `about ${fmtDays(b.pending)} more day${b.pending === 1 ? "" : "s"} waiting for approval` : "";
+  });
 }
 
 $("reqSubmitBtn").addEventListener("click", () => withBtn($("reqSubmitBtn"), async () => {
   const msg = $("reqMsg");
+  const kind = $("reqType").value;
   const start = $("reqStart").value;
+  const end = $("reqEnd").value || start;
   if (!start) { setMsg(msg, "Pick a start date.", "error"); return; }
+  const year = Number(start.slice(0, 4));
+  const days = bdInYear(start, end);
+  const b = balance(me, kind, year);
+  const avail = b.left - b.pending;
+  if (days > avail && !confirm(`This request is about ${days} weekday(s), but you only have ${fmtDays(Math.max(avail, 0))} ${KIND_LABEL[kind]} day(s) left in ${year} (counting requests already waiting). Submit anyway? Your team leader decides the final days and will see the warning.`)) return;
   try {
-    await api("createRequest", {
-      kind: $("reqType").value, startDate: start, endDate: $("reqEnd").value || start, note: $("reqNote").value.trim(),
-    });
+    await api("createRequest", { kind, startDate: start, endDate: end, note: $("reqNote").value.trim() });
     setMsg(msg, "Submitted. Waiting on your team leader.", "ok");
     $("reqStart").value = ""; $("reqEnd").value = ""; $("reqNote").value = "";
     await sync(true);
@@ -648,33 +755,43 @@ function renderMyRequests() {
   if (!mine.length) { el.innerHTML = '<p class="empty">No requests yet.</p>'; return; }
   el.innerHTML = mine.map((r) => `
     <div class="card-row">
-      <div class="top-line"><span class="title">${r.kind === "pto" ? "PTO" : "Home Office"}</span>${badgeHtml(r.status)}</div>
-      <div class="sub">${esc(datesText(r))} · ${businessDays(r.startDate, r.endDate)} business day(s)</div>
+      <div class="top-line"><span class="title">${esc(KIND_LABEL[r.kind])}</span>${badgeHtml(r.status)}</div>
+      <div class="sub">${esc(datesText(r))} · ${esc(daysLabel(r))}</div>
       ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
     </div>`).join("");
 }
 
-// ---------- Hero Shift ----------
+// ---------- Hero Shift: one volunteer per team (Sales / Support) per holiday ----------
+function slotTeam(r) {
+  return r.team || (usersById[r.requesterId] && usersById[r.requesterId].team) || "support";
+}
 function renderHeroShiftList() {
   const el = $("heroShiftList");
   const today = new Date().toISOString().slice(0, 10);
   const holidayReqs = requests.filter((r) => r.kind === "holiday_work");
-  el.innerHTML = US_HOLIDAYS.map((h) => {
-    const forDate = holidayReqs.filter((r) => r.holidayDate === h.date);
-    const mine = forDate.find((r) => r.requesterId === me.id);
-    const past = h.date < today;
-    const volunteers = forDate.map((r) =>
-      `<span class="badge ${esc(r.status)}" style="margin-right:4px;">${esc(nameOf(r.requesterId))}</span>`).join("");
-    let action = "";
-    if (!past) {
-      action = mine
-        ? `<span class="msg">${badgeHtml(mine.status)} you volunteered</span>`
-        : `<button class="btn small" data-date="${esc(h.date)}" data-name="${esc(h.name)}">Volunteer</button>`;
+  const slotHtml = (h, team, past) => {
+    const label = team === "sales" ? "Sales" : "Support";
+    const forSlot = holidayReqs.filter((r) => r.holidayDate === h.date && slotTeam(r) === team);
+    const active = forSlot.filter((r) => r.status !== "denied"); // denied volunteers disappear
+    const mine = active.find((r) => r.requesterId === me.id);
+    const declined = forSlot.some((r) => r.requesterId === me.id && r.status === "denied");
+    let body;
+    if (active.length) {
+      body = active.map((r) => `<span class="badge ${esc(r.status)}" style="margin-right:4px;">${esc(nameOf(r.requesterId))}</span>`).join("");
+      if (mine) body += '<span class="msg" style="margin:0 0 0 4px;">you volunteered</span>';
+    } else if (!past && me.team === team) {
+      body = `<button class="btn small" data-date="${esc(h.date)}" data-name="${esc(h.name)}">Volunteer</button>`;
+    } else {
+      body = `<span class="note" style="color:var(--muted);">${past ? "No one" : "Open"}</span>`;
     }
+    if (declined && !mine) body += `<div class="note" style="color:var(--muted);">Your earlier request wasn't approved.</div>`;
+    return `<div class="slot"><span class="slot-label">${label}</span><div class="slot-body">${body}</div></div>`;
+  };
+  el.innerHTML = US_HOLIDAYS.map((h) => {
+    const past = h.date < today;
     return `<div class="card-row">
       <div class="top-line"><span class="title">${esc(h.name)}</span><span class="sub">${esc(fmtDate(h.date))}</span></div>
-      ${volunteers ? `<div style="margin-top:6px;">${volunteers}</div>` : '<div class="note" style="color:var(--muted);">No volunteers yet</div>'}
-      <div class="actions">${action}</div>
+      ${slotHtml(h, "sales", past)}${slotHtml(h, "support", past)}
     </div>`;
   }).join("");
   el.querySelectorAll("[data-date]").forEach((btn) => {
@@ -685,7 +802,7 @@ function renderHeroShiftList() {
           startDate: btn.dataset.date, endDate: btn.dataset.date,
         });
         await sync(true);
-      } catch (e) { alert(e.message); }
+      } catch (e) { alert(e.message); await sync(true).catch(() => {}); }
     }));
   });
 }
@@ -724,20 +841,42 @@ function populateMemberSelect() {
   const current = sel.value;
   const active = users.filter((u) => u.active === "yes")
     .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
-  sel.innerHTML = active.map((u) => `<option value="${esc(u.id)}">${esc(u.name || u.email)}</option>`).join("");
+  sel.innerHTML = '<option value="">None</option>' +
+    active.map((u) => `<option value="${esc(u.id)}">${esc(u.name || u.email)}</option>`).join("");
   if (current) sel.value = current;
 }
 
-function renderPending() {
+function typeLabelOf(r) {
+  return r.kind === "holiday_work"
+    ? `Hero Shift: ${esc(r.holidayName)} (${slotTeam(r) === "sales" ? "Sales" : "Support"})`
+    : esc(KIND_LABEL[r.kind]);
+}
+
+function renderPending(force) {
   const el = $("pendingList");
   if (!isLeader) { el.innerHTML = ""; return; }
+  if (!force && el.contains(document.activeElement) && document.activeElement !== el) return; // don't wipe a number being typed
   const pending = requests.filter((r) => r.status === "pending");
   if (!pending.length) { el.innerHTML = '<p class="empty">Nothing pending.</p>'; return; }
   el.innerHTML = pending.map((r) => {
-    const typeLabel = r.kind === "pto" ? "PTO" : r.kind === "home_office" ? "Home Office" : `Hero Shift: ${esc(r.holidayName)}`;
+    const isHero = r.kind === "holiday_work";
+    let extra = "";
+    const u = usersById[r.requesterId];
+    if (!isHero && u) {
+      const b = balance(u, r.kind, reqYear(r));
+      const auto = autoDays(r);
+      extra = `<div class="sub">${esc(KIND_LABEL[r.kind])} ${reqYear(r)}: ${fmtDays(b.used)} of ${fmtDays(b.allot)} days used · ${fmtDays(b.left)} left</div>
+        <div class="actions" style="align-items:center;flex-wrap:wrap;">
+          <label style="margin:0;font-size:11px;color:var(--muted);">Days to deduct</label>
+          <input type="number" min="0" step="0.5" value="${auto}" data-days="${esc(r.id)}" data-left="${b.left}" style="width:70px;display:inline-block;">
+          <span data-over="${esc(r.id)}"></span>
+        </div>
+        <div class="sub">${auto} weekday${auto === 1 ? "" : "s"} in this range. Adjust for holidays or half days.</div>`;
+    }
     return `<div class="card-row">
-      <div class="top-line"><span class="title">${esc(nameOf(r.requesterId))}: ${typeLabel}</span>${badgeHtml(r.status)}</div>
+      <div class="top-line"><span class="title">${esc(nameOf(r.requesterId))}: ${typeLabelOf(r)}</span>${badgeHtml(r.status)}</div>
       <div class="sub">${esc(datesText(r))}</div>
+      ${extra}
       ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
       <div class="actions">
         <button class="btn small" data-approve="${esc(r.id)}">Approve</button>
@@ -745,11 +884,58 @@ function renderPending() {
       </div>
     </div>`;
   }).join("");
-  const decide = (btn, id, status) => withBtn(btn, async () => {
-    try { await api("decideRequest", { id, status }); await sync(true); } catch (e) { alert(e.message); }
+
+  const updateOver = (input) => {
+    const left = parseFloat(input.dataset.left) || 0, d = parseFloat(input.value) || 0;
+    const span = el.querySelector(`[data-over="${input.dataset.days}"]`);
+    span.innerHTML = d > left ? `<span class="chip warn">Exceeds balance by ${fmtDays(d - left)}</span>` : "";
+  };
+  el.querySelectorAll("[data-days]").forEach((input) => { updateOver(input); input.addEventListener("input", () => updateOver(input)); });
+
+  const decide = (btn, id, status, days) => withBtn(btn, async () => {
+    try {
+      await api("decideRequest", days === undefined ? { id, status } : { id, status, days });
+      await sync(true);
+    } catch (e) { alert(e.message); }
   });
-  el.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => decide(b, b.dataset.approve, "approved")));
+  el.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => {
+    const input = el.querySelector(`[data-days="${b.dataset.approve}"]`);
+    let days;
+    if (input) {
+      days = parseFloat(input.value);
+      if (!(days >= 0)) { alert("Enter how many days to deduct."); return; }
+    }
+    decide(b, b.dataset.approve, "approved", days);
+  }));
   el.querySelectorAll("[data-deny]").forEach((b) => b.addEventListener("click", () => decide(b, b.dataset.deny, "denied")));
+}
+
+function renderDecided() {
+  const el = $("decidedList");
+  if (!isLeader) { el.innerHTML = ""; return; }
+  const decided = requests.filter((r) => r.status !== "pending")
+    .sort((a, b) => String(b.reviewedAt).localeCompare(String(a.reviewedAt))).slice(0, 15);
+  if (!decided.length) { el.innerHTML = '<p class="empty">Nothing decided yet.</p>'; return; }
+  el.innerHTML = decided.map((r) => {
+    const counted = r.kind !== "holiday_work" && r.status === "approved";
+    const d = chargedDays(r);
+    return `<div class="card-row">
+      <div class="top-line"><span class="title">${esc(nameOf(r.requesterId))}: ${typeLabelOf(r)}</span>${badgeHtml(r.status)}</div>
+      <div class="sub">${esc(datesText(r))}</div>
+      ${counted ? `<div class="sub">${fmtDays(d)} day${d === 1 ? "" : "s"} deducted <button class="link-btn" data-change="${esc(r.id)}">Change days</button></div>` : ""}
+    </div>`;
+  }).join("");
+  el.querySelectorAll("[data-change]").forEach((btn) => btn.addEventListener("click", () => {
+    const r = requests.find((x) => x.id === btn.dataset.change);
+    if (!r) return;
+    const ans = prompt(`Days to deduct for ${nameOf(r.requesterId)} (${datesText(r)}). Whole or half days:`, String(chargedDays(r)));
+    if (ans === null) return;
+    const days = parseFloat(ans);
+    if (!(days >= 0)) { alert("Enter a number of days."); return; }
+    withBtn(btn, async () => {
+      try { await api("decideRequest", { id: r.id, status: "approved", days }); await sync(true); } catch (e) { alert(e.message); }
+    });
+  }));
 }
 
 $("tpAddBtn").addEventListener("click", () => withBtn($("tpAddBtn"), async () => {
@@ -758,9 +944,11 @@ $("tpAddBtn").addEventListener("click", () => withBtn($("tpAddBtn"), async () =>
     await api("createUser", {
       name: $("tpName").value.trim(), email: $("tpEmail").value.trim(), password: $("tpPass").value,
       team: $("tpTeam").value, role: $("tpRole").value,
+      ptoAllotment: $("tpPto").value, homeOfficeAllotment: $("tpHo").value,
     });
     setMsg(msg, "Account created. Give them their email and temporary password; they'll choose their own at first sign-in.", "ok");
     ["tpName", "tpEmail", "tpPass"].forEach((id) => { $(id).value = ""; });
+    $("tpPto").value = "15"; $("tpHo").value = "21";
     await sync(true);
   } catch (e) { setMsg(msg, e.message, "error"); }
 }));
@@ -780,17 +968,17 @@ function renderTeamList(force) {
           <span class="badge ${u.role === "leader" ? "approved" : "pending"}">${u.role === "leader" ? "Leader" : "Member"}</span>
         </span>
       </div>
-      <div class="sub">${esc(u.email)} · PTO ${u.ptoAllotment}d · ${u.team === "sales" ? "Sales" : "Support"} · Base Pay ${fmtMoney(u.baseSalary || 0)}</div>
+      <div class="sub">${esc(u.email)} · PTO ${u.ptoAllotment}d · Home Office ${u.homeOfficeAllotment}d · ${u.team === "sales" ? "Sales" : "Support"}</div>
       <div class="actions" style="flex-wrap:wrap;">
         <label style="font-size:11px;color:var(--muted);">PTO</label>
         <input type="number" data-allot="${esc(u.id)}" value="${esc(u.ptoAllotment)}" style="width:60px;display:inline-block;">
+        <label style="font-size:11px;color:var(--muted);">Home Office</label>
+        <input type="number" data-ho="${esc(u.id)}" value="${esc(u.homeOfficeAllotment)}" style="width:60px;display:inline-block;">
         <label style="font-size:11px;color:var(--muted);">Team</label>
         <select data-team="${esc(u.id)}" style="width:auto;display:inline-block;padding:6px;">
           <option value="support" ${u.team === "support" ? "selected" : ""}>Support</option>
           <option value="sales" ${u.team === "sales" ? "selected" : ""}>Sales</option>
         </select>
-        <label style="font-size:11px;color:var(--muted);">Base Pay</label>
-        <input type="number" data-pay="${esc(u.id)}" value="${esc(u.baseSalary || 0)}" style="width:80px;display:inline-block;">
         <button class="btn small ghost" data-save="${esc(u.id)}">Save</button>
         <button class="btn small ghost" data-reset="${esc(u.id)}">Reset password</button>
         ${u.id !== me.id ? `<button class="btn small ghost" data-role="${esc(u.id)}" data-current="${esc(u.role)}">${u.role === "leader" ? "Make Member" : "Make Leader"}</button>
@@ -807,8 +995,8 @@ function renderTeamList(force) {
     run(btn, "updateUser", {
       userId: id,
       ptoAllotment: parseFloat(el.querySelector(`[data-allot="${id}"]`).value) || 0,
+      homeOfficeAllotment: parseFloat(el.querySelector(`[data-ho="${id}"]`).value) || 0,
       team: el.querySelector(`[data-team="${id}"]`).value,
-      baseSalary: parseFloat(el.querySelector(`[data-pay="${id}"]`).value) || 0,
     });
   }));
   el.querySelectorAll("[data-role]").forEach((btn) => btn.addEventListener("click", () =>
@@ -822,30 +1010,109 @@ function renderTeamList(force) {
   }));
 }
 
-// ---------- Reimbursements (leaders) ----------
+// ---------- Expenses (leaders) ----------
+function updateExpenseForm() {
+  const card = $("rbType").value === "company_card";
+  $("rbMemberLabel").textContent = card ? "Person who bought it (optional)" : "Person who paid (required)";
+}
+$("rbType").addEventListener("change", updateExpenseForm);
+updateExpenseForm();
+
+function readB64(blob) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result).split(",")[1] || "");
+    fr.onerror = () => reject(new Error("Couldn't read that file."));
+    fr.readAsDataURL(blob);
+  });
+}
+// Photos are shrunk and converted to JPEG in the browser; PDFs are sent as they are.
+async function prepareTicket(file) {
+  if (!file) return null;
+  if (file.type === "application/pdf") {
+    if (file.size > MAX_TICKET_BYTES) throw new Error("That PDF is too large (max 5 MB).");
+    return { fileName: file.name, mimeType: "application/pdf", fileData: await readB64(file) };
+  }
+  if (/^image\//.test(file.type)) {
+    let bmp;
+    try { bmp = await createImageBitmap(file); }
+    catch (e) { throw new Error("Couldn't read that image. Try a JPG or PNG photo, or a PDF."); }
+    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(bmp.width * scale));
+    c.height = Math.max(1, Math.round(bmp.height * scale));
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.8));
+    if (!blob) throw new Error("Couldn't process that image.");
+    if (blob.size > MAX_TICKET_BYTES) throw new Error("That image is too large even after shrinking.");
+    return { fileName: file.name.replace(/\.[^.]+$/, "") + ".jpg", mimeType: "image/jpeg", fileData: await readB64(blob) };
+  }
+  throw new Error("Attach a photo or a PDF.");
+}
+
 $("rbSubmitBtn").addEventListener("click", () => withBtn($("rbSubmitBtn"), async () => {
   const msg = $("rbMsg");
+  const type = $("rbType").value;
+  const memberId = $("rbMember").value;
+  const amount = parseFloat($("rbAmount").value);
+  if (type === "reimbursable" && !memberId) { setMsg(msg, "Choose who this reimbursement is for.", "error"); return; }
+  if (!(amount > 0)) { setMsg(msg, "Enter an amount above 0.", "error"); return; }
   try {
-    await api("createReimbursement", {
-      memberId: $("rbMember").value, month: $("rbMonth").value, year: parseInt($("rbYear").value, 10),
-      category: $("rbCategory").value, amount: parseFloat($("rbAmount").value), note: $("rbNote").value.trim(),
-    });
+    setMsg(msg, $("rbFile").files[0] ? "Uploading ticket…" : "Saving…", "");
+    const ticket = await prepareTicket($("rbFile").files[0]);
+    await api("createExpense", Object.assign({
+      paymentType: type, memberId, month: $("rbMonth").value, year: parseInt($("rbYear").value, 10),
+      category: $("rbCategory").value, amount, note: $("rbNote").value.trim(),
+    }, ticket || {}));
     setMsg(msg, "Logged.", "ok");
-    $("rbAmount").value = "0"; $("rbNote").value = "";
+    $("rbAmount").value = "0"; $("rbNote").value = ""; $("rbFile").value = "";
     await sync(true);
   } catch (e) { setMsg(msg, e.message, "error"); }
 }));
 
-function renderReimbTable() {
+function renderExpenses() {
   const body = $("rbTableBody");
   if (!isLeader) { body.innerHTML = ""; return; }
-  if (!reimbs.length) { body.innerHTML = '<tr><td colspan="4" class="empty">No entries yet.</td></tr>'; return; }
-  let total = 0;
-  const rows = reimbs.map((r) => {
-    total += r.amount || 0;
-    return `<tr><td>${esc(nameOf(r.memberId))}</td><td>${esc(r.month)} ${esc(r.year)}</td><td>${esc(r.category)}</td><td class="amount">${fmtMoney(r.amount)}</td></tr>`;
+  if (!expenses.length) { body.innerHTML = '<tr><td colspan="6" class="empty">No expenses logged yet.</td></tr>'; return; }
+  let reimb = 0, card = 0;
+  const rows = expenses.map((x) => {
+    const isCard = x.paymentType === "company_card";
+    if (isCard) card += x.amount; else reimb += x.amount;
+    return `<tr>
+      <td>${esc(x.memberId ? nameOf(x.memberId) : "None")}</td>
+      <td>${esc(x.month)} ${esc(x.year)}</td>
+      <td>${isCard ? '<span class="chip card">Company card</span>' : "Reimbursable"}</td>
+      <td>${esc(x.category)}${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}</td>
+      <td class="amount">${fmtMoney(x.amount)}</td>
+      <td style="white-space:nowrap;">${x.ticketFileId ? `<button class="link-btn" data-ticket="${esc(x.id)}">Ticket</button> ` : ""}<button class="link-btn danger" data-del="${esc(x.id)}">Delete</button></td>
+    </tr>`;
   }).join("");
-  body.innerHTML = rows + `<tr class="total-row"><td colspan="3">Total</td><td class="amount">${fmtMoney(total)}</td></tr>`;
+  body.innerHTML = rows +
+    `<tr class="total-row"><td colspan="4">Reimbursable total</td><td class="amount">${fmtMoney(reimb)}</td><td></td></tr>` +
+    `<tr class="total-row"><td colspan="4">Company card total (not reimbursable)</td><td class="amount">${fmtMoney(card)}</td><td></td></tr>`;
+
+  body.querySelectorAll("[data-ticket]").forEach((btn) => btn.addEventListener("click", () => openTicket(btn.dataset.ticket)));
+  body.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
+    if (!confirm("Delete this expense permanently? This can't be undone, and its ticket will be removed too.")) return;
+    withBtn(btn, async () => {
+      try { await api("deleteExpense", { id: btn.dataset.del }); await sync(true); } catch (e) { alert(e.message); }
+    });
+  }));
+}
+
+async function openTicket(id) {
+  const w = window.open("", "_blank");
+  try {
+    const d = await api("getTicket", { id });
+    const bytes = Uint8Array.from(atob(d.data), (c) => c.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: d.mimeType }));
+    if (w) w.location.href = url; else window.open(url, "_blank");
+  } catch (e) {
+    if (w) w.close();
+    alert(e.message);
+  }
 }
 
 // ---------- Reports (leaders) ----------
@@ -853,12 +1120,13 @@ $("repGenerateBtn").addEventListener("click", () => withBtn($("repGenerateBtn"),
   const msg = $("repMsg");
   setMsg(msg, "", "");
   const month = $("repMonth").value, year = parseInt($("repYear").value, 10);
+  const label = `${month} ${year}`;
   try {
     const d = await api("report", { month, year });
-    renderExtrasReport(d.extras, `${month} ${year}`);
-    renderReimbReport(d.reimbursements, `${month} ${year}`);
-    $("extrasReportBlock").classList.remove("hidden");
-    $("reimbReportBlock").classList.remove("hidden");
+    renderExtrasReport(d.extras, label);
+    renderExpenseReport(d.expenses.filter((x) => x.paymentType !== "company_card"), "reimb", label, "No reimbursable expenses logged for this month.");
+    renderExpenseReport(d.expenses.filter((x) => x.paymentType === "company_card"), "card", label, "No company card purchases logged for this month.");
+    ["extrasReportBlock", "reimbReportBlock", "cardReportBlock"].forEach((id) => $(id).classList.remove("hidden"));
   } catch (e) { setMsg(msg, e.message, "error"); }
 }));
 
@@ -881,17 +1149,17 @@ function renderExtrasReport(rows, label) {
   body.innerHTML = html + `<tr class="report-total-row"><td>Total</td><td>${t.extraDays}</td><td>${t.heroShift}</td><td>${t.hours10}h</td><td>${t.hours15}h</td></tr>`;
 }
 
-function renderReimbReport(rows, label) {
-  $("reimbReportMonth").textContent = label;
-  const body = $("reimbReportBody");
-  if (!rows.length) { body.innerHTML = '<tr><td colspan="4" class="empty">No reimbursements logged for this month.</td></tr>'; return; }
+function renderExpenseReport(rows, which, label, emptyText) {
+  $(which + "ReportMonth").textContent = label;
+  const body = $(which + "ReportBody");
+  if (!rows.length) { body.innerHTML = `<tr><td colspan="5" class="empty">${esc(emptyText)}</td></tr>`; return; }
   const sorted = rows.slice().sort((a, b) => nameOf(a.memberId).localeCompare(nameOf(b.memberId)));
   let total = 0;
   const html = sorted.map((r) => {
     total += r.amount || 0;
-    return `<tr><td>${esc(nameOf(r.memberId))}</td><td>${esc(r.category)}</td><td>${esc(r.note)}</td><td class="amount">${fmtMoney(r.amount)}</td></tr>`;
+    return `<tr><td>${esc(r.memberId ? nameOf(r.memberId) : "None")}</td><td>${esc(r.category)}</td><td>${esc(r.note)}</td><td>${r.ticketFileId ? "Yes" : ""}</td><td class="amount">${fmtMoney(r.amount)}</td></tr>`;
   }).join("");
-  body.innerHTML = html + `<tr class="report-total-row"><td colspan="3">Total</td><td class="amount">${fmtMoney(total)}</td></tr>`;
+  body.innerHTML = html + `<tr class="report-total-row"><td colspan="4">Total</td><td class="amount">${fmtMoney(total)}</td></tr>`;
 }
 
 function printReport(blockId) {
@@ -906,46 +1174,57 @@ window.addEventListener("afterprint", () => {
 });
 $("printExtrasBtn").addEventListener("click", () => printReport("extrasReportBlock"));
 $("printReimbBtn").addEventListener("click", () => printReport("reimbReportBlock"));
+$("printCardBtn").addEventListener("click", () => printReport("cardReportBlock"));
 
-// ---------- Pay Calculator ----------
+// ---------- Pay Calculator: private, runs only in this browser. Nothing is saved or sent. ----------
 const HOURS_PER_MONTH = 173.33, HOURS_PER_DAY = 8, OT_MULT = 1.5, CLEANING_PERCENT = 5;
-let pcLoaded = { extraDays: 0, heroShift: 0, hours10: 0, hours15: 0, reimb: 0, basePay: 0, team: "support" };
+const PC_INPUTS = ["pcBase", "pcDays", "pcHero", "pcH10", "pcH15", "pcReimb", "pcCleaningTotal", "pcBonus"];
 
-$("pcLoadBtn").addEventListener("click", () => withBtn($("pcLoadBtn"), async () => {
-  const msg = $("pcMsg");
-  setMsg(msg, "", "");
-  try {
-    const d = await api("payData", { month: $("pcMonth").value, year: parseInt($("pcYear").value, 10) });
-    pcLoaded = d;
-    $("pcCleaningRow").classList.toggle("hidden", d.team !== "sales");
-    $("pcCleaningLine").classList.toggle("hidden", d.team !== "sales");
-    $("pcBreakdown").classList.remove("hidden");
-    if (!d.basePay) setMsg(msg, "Your Team Leader hasn't set your Base Pay yet, so this shows $0 until they do.", "error");
-    calculatePay();
-  } catch (e) { setMsg(msg, e.message, "error"); }
-}));
-["pcBonus", "pcCleaningTotal", "pcCleaningCount"].forEach((id) => $(id).addEventListener("input", calculatePay));
-
+function clearPayCalc() {
+  PC_INPUTS.forEach((id) => { $(id).value = "0"; });
+  $("pcCleaningCount").value = "4";
+  $("pcTeam").value = "support";
+  setMsg($("pcMsg"), "", "");
+  pcTeamInit = false;
+  calculatePay();
+}
 function calculatePay() {
-  const { extraDays, heroShift, hours10, hours15, reimb, basePay, team } = pcLoaded;
-  const rate = basePay / HOURS_PER_MONTH;
+  const n = (id) => parseFloat($(id).value) || 0;
+  const sales = $("pcTeam").value === "sales";
+  $("pcCleaningRow").classList.toggle("hidden", !sales);
+  $("pcCleaningLine").classList.toggle("hidden", !sales);
+  const base = n("pcBase");
+  const rate = base / HOURS_PER_MONTH;
   const otRate = rate * OT_MULT;
-  const dayPay = extraDays * HOURS_PER_DAY * rate;
-  const h10Pay = hours10 * rate;
-  const h15Pay = hours15 * otRate;
-  const heroPay = heroShift * HOURS_PER_DAY * otRate;
-  const cTotal = parseFloat($("pcCleaningTotal").value) || 0;
-  const cCount = parseFloat($("pcCleaningCount").value) || 0;
-  const cleaning = team === "sales" && cCount > 0 ? (cTotal * (CLEANING_PERCENT / 100)) / cCount : 0;
-  const bonus = parseFloat($("pcBonus").value) || 0;
+  const dayPay = n("pcDays") * HOURS_PER_DAY * rate;
+  const h10Pay = n("pcH10") * rate;
+  const h15Pay = n("pcH15") * otRate;
+  const heroPay = n("pcHero") * HOURS_PER_DAY * otRate;
+  const cCount = n("pcCleaningCount");
+  const cleaning = sales && cCount > 0 ? (n("pcCleaningTotal") * (CLEANING_PERCENT / 100)) / cCount : 0;
+  const reimb = n("pcReimb");
+  const bonus = n("pcBonus");
   const extraTotal = dayPay + h10Pay + h15Pay + heroPay + reimb + cleaning;
-  const grand = basePay + extraTotal + bonus;
+  const grand = base + extraTotal + bonus;
   const set = (id, v) => { $(id).textContent = fmtMoney(v); };
   set("pcOutRate", rate); set("pcOutOTRate", otRate); set("pcOutDayPay", dayPay);
   set("pcOutH10Pay", h10Pay); set("pcOutH15Pay", h15Pay); set("pcOutHeroPay", heroPay);
   set("pcOutReimb", reimb); set("pcOutCleaning", cleaning); set("pcOutExtraTotal", extraTotal);
   set("pcOutBonus", bonus); set("pcOutGrandTotal", grand);
 }
+PC_INPUTS.concat(["pcCleaningCount"]).forEach((id) => $(id).addEventListener("input", calculatePay));
+$("pcTeam").addEventListener("change", calculatePay);
+
+$("pcLoadBtn").addEventListener("click", () => {
+  const month = $("pcMonth").value, year = parseInt($("pcYear").value, 10);
+  const rows = myExtras.filter((e) => e.month === month && e.year === year);
+  const sum = (k) => rows.reduce((a, e) => a + e[k], 0);
+  $("pcDays").value = sum("extraDays"); $("pcHero").value = sum("heroShift");
+  $("pcH10").value = sum("hours10"); $("pcH15").value = sum("hours15");
+  calculatePay();
+  if (rows.length) setMsg($("pcMsg"), `Filled in from ${rows.length} logged entr${rows.length === 1 ? "y" : "ies"}. You can still edit the numbers.`, "ok");
+  else setMsg($("pcMsg"), "You haven't logged any extras for that month.", "error");
+});
 
 // ---------- Office Info ----------
 function renderOffice() {
@@ -972,6 +1251,7 @@ $("officeSaveBtn").addEventListener("click", () => withBtn($("officeSaveBtn"), a
 }));
 
 // ---------- start ----------
+calculatePay();
 (async function init() {
   if (API_URL.indexOf("PASTE_YOUR") === 0) {
     setMsg($("authMsg"), "This site isn't connected yet: the Web app URL is missing from the HTML file.", "error");
