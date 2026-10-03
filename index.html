@@ -171,6 +171,7 @@
       <button class="tab" data-tab="extras">Log Extras</button>
       <button class="tab" data-tab="paycalc">Pay Calculator</button>
       <button class="tab" data-tab="office">Office Info</button>
+      <button class="tab" data-tab="summary" id="summaryTabBtn" style="display:none;">Summary</button>
       <button class="tab" data-tab="team" id="teamTabBtn" style="display:none;">Team</button>
       <button class="tab" data-tab="reimb" id="reimbTabBtn" style="display:none;">Expenses</button>
       <button class="tab" data-tab="reports" id="reportsTabBtn" style="display:none;">Reports</button>
@@ -323,8 +324,23 @@
       </div>
     </div>
 
+    <!-- TAB: Summary (leaders only) -->
+    <div class="panel" id="panel-summary">
+      <div id="sumListView">
+        <p class="admin-note">One card per person. Choose a month to see who has not logged their extras. Open Manage to see, edit or add anything for that person.</p>
+        <div class="field-grid">
+          <div class="field-row"><label for="smMonth">Extras for month</label><select id="smMonth"></select></div>
+          <div class="field-row"><label for="smYear">Year</label><input type="number" id="smYear" value="2026" step="1"></div>
+        </div>
+        <div id="sumList"><p class="empty">Loading…</p></div>
+      </div>
+      <div id="sumDetailView" class="hidden"></div>
+    </div>
+
     <!-- TAB: Team (leaders only) -->
     <div class="panel" id="panel-team">
+      <div id="backendStatus" class="admin-note"></div>
+      <button class="btn ghost small" id="testMailBtn" style="margin-bottom:14px;">Send test email</button>
       <p class="section-label">PENDING APPROVALS</p>
       <div id="pendingList"><p class="empty">Loading…</p></div>
 
@@ -448,6 +464,15 @@
   </div>
 </div>
 
+<div id="formModal" class="modal hidden">
+  <div class="modal-card" style="max-height:90vh;overflow:auto;">
+    <p class="section-label" id="formTitle"></p>
+    <div id="formBody"></div>
+    <div class="actions"><button class="btn small" id="formSaveBtn">Save</button><button class="btn ghost small" id="formCancelBtn">Cancel</button></div>
+    <p class="msg" id="formMsg"></p>
+  </div>
+</div>
+
 <div id="pwModal" class="modal hidden">
   <div class="modal-card">
     <p class="section-label">CHANGE PASSWORD</p>
@@ -467,7 +492,7 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
@@ -495,6 +520,7 @@ const $ = (id) => document.getElementById(id);
 let token = null, me = null, isLeader = false;
 let users = [], usersById = {}, requests = [], myExtras = [], expenses = [], officeText = "";
 let pollTimer = null, pcTeamInit = false;
+let backend = { version: undefined, mail: null }, allExtras = [], manageId = null, formFields = [], formHandler = null;
 
 // ---------- helpers ----------
 function esc(s) {
@@ -539,13 +565,13 @@ async function withBtn(btn, fn) {
   try { return await fn(); } finally { btn.disabled = prev; }
 }
 
-["exMonth", "rbMonth", "repMonth", "pcMonth"].forEach((id) => {
+["exMonth", "rbMonth", "repMonth", "pcMonth", "smMonth"].forEach((id) => {
   const sel = $(id);
   sel.innerHTML = MONTHS.map((m) => `<option>${m}</option>`).join("");
   sel.value = MONTHS[new Date().getMonth()];
 });
 
-["exYear", "rbYear", "repYear", "pcYear"].forEach((id) => { $(id).value = new Date().getFullYear(); });
+["exYear", "rbYear", "repYear", "pcYear", "smYear"].forEach((id) => { $(id).value = new Date().getFullYear(); });
 
 // ---------- balances (PTO and Home Office are counted separately, per calendar year) ----------
 function fmtDays(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
@@ -608,6 +634,8 @@ function showAuth(message) {
   $("mainApp").classList.add("hidden");
   $("whoamiBar").classList.add("hidden");
   $("pwModal").classList.add("hidden");
+  $("formModal").classList.add("hidden");
+  manageId = null;
   setMsg($("authMsg"), message || "", message ? "error" : "");
 }
 
@@ -668,15 +696,17 @@ async function sync(force) {
   myExtras = d.myExtras;
   expenses = d.expenses || [];
   officeText = d.office || "";
+  backend = { version: d.version, mail: d.mail || null };
+  allExtras = d.allExtras || [];
   renderAll(!!force);
 }
 
 function renderAll(force) {
   $("whoamiText").textContent = (me.name || me.email) + (isLeader ? " · Team Leader" : "");
-  ["teamTabBtn", "reimbTabBtn", "reportsTabBtn"].forEach((id) => { $(id).style.display = isLeader ? "" : "none"; });
+  ["summaryTabBtn", "teamTabBtn", "reimbTabBtn", "reportsTabBtn"].forEach((id) => { $(id).style.display = isLeader ? "" : "none"; });
   $("officeEditBtn").classList.toggle("hidden", !isLeader);
   const activeTab = document.querySelector(".tab.active");
-  if (!isLeader && activeTab && ["team", "reimb", "reports"].indexOf(activeTab.dataset.tab) >= 0) activateTab("pto");
+  if (!isLeader && activeTab && ["summary", "team", "reimb", "reports"].indexOf(activeTab.dataset.tab) >= 0) activateTab("pto");
   if (!pcTeamInit) { $("pcTeam").value = me.team || "support"; pcTeamInit = true; calculatePay(); }
   populateMemberSelect();
   renderPtoStats();
@@ -685,6 +715,8 @@ function renderAll(force) {
   renderPending(force);
   renderDecided();
   renderTeamList(force);
+  renderBackendStatus();
+  renderSummary();
   renderMyExtras();
   renderExpenses();
   renderOffice();
@@ -830,7 +862,7 @@ function renderMyExtras() {
   el.innerHTML = myExtras.map((e) => `
     <div class="card-row">
       <div class="top-line"><span class="title">${esc(e.month)} ${esc(e.year)}</span></div>
-      <div class="sub">Days: ${e.extraDays} · Hero Shifts: ${e.heroShift} · 1.0x: ${e.hours10}h · 1.5x: ${e.hours15}h</div>
+      <div class="sub">Days: ${e.extraDays} · Hero Shifts: ${e.heroShift} · 1.0x: ${e.hours10}h · 1.5x: ${e.hours15}h${e.enteredBy && e.enteredBy !== me.id ? " · entered by your team leader" : ""}</div>
       ${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}
     </div>`).join("");
 }
@@ -1175,6 +1207,239 @@ window.addEventListener("afterprint", () => {
 $("printExtrasBtn").addEventListener("click", () => printReport("extrasReportBlock"));
 $("printReimbBtn").addEventListener("click", () => printReport("reimbReportBlock"));
 $("printCardBtn").addEventListener("click", () => printReport("cardReportBlock"));
+
+// ---------- Backend status + email test (leaders) ----------
+function backendOk() { return backend.version !== undefined && backend.version >= 3; }
+function needBackend() {
+  if (backendOk()) return true;
+  alert("The backend is out of date. Paste the newest Code.gs into Apps Script, run authorize and setup, then Deploy > Manage deployments > New version. The Team tab explains it.");
+  return false;
+}
+function renderBackendStatus() {
+  const el = $("backendStatus");
+  if (!isLeader) { el.innerHTML = ""; return; }
+  if (!backendOk()) {
+    el.innerHTML = "<strong>Your backend is out of date.</strong> Paste the newest Code.gs into Apps Script, run <em>authorize</em> and <em>setup</em>, then Deploy > Manage deployments > pencil > New version > Deploy.";
+    el.style.color = "var(--red)";
+    return;
+  }
+  el.style.color = "";
+  const m = backend.mail || {};
+  let mailLine;
+  if (!m.notifyEmail) mailLine = "Request emails are off (NOTIFY_EMAIL is empty).";
+  else if (m.lastError) mailLine = `<span style="color:var(--red)">The last email failed: ${esc(m.lastError)}</span>`;
+  else if (m.lastOkAt) mailLine = `Request emails go to ${esc(m.notifyEmail)}. The last one was sent ${esc(new Date(m.lastOkAt).toLocaleString())}.`;
+  else mailLine = `Request emails go to ${esc(m.notifyEmail)}. None sent yet: use "Send test email".`;
+  el.innerHTML = `Backend version ${esc(backend.version)} · ${mailLine}${m.quota != null ? ` · ${esc(m.quota)} emails left today` : ""}${m.notifyMembers === false ? " · Members are not emailed about decisions." : ""}`;
+}
+$("testMailBtn").addEventListener("click", () => withBtn($("testMailBtn"), async () => {
+  if (!needBackend()) return;
+  try {
+    const d = await api("testEmail");
+    alert(`Test email sent to ${d.to}. Check the inbox and the spam folder.`);
+  } catch (e) { alert(e.message); }
+  await sync(true).catch(() => {});
+}));
+
+// ---------- generic edit form (used by Manage) ----------
+function openForm(title, fields, onSave) {
+  formFields = fields;
+  formHandler = onSave;
+  $("formTitle").textContent = title;
+  $("formBody").innerHTML = fields.map((f) => {
+    const id = "ff_" + f.id;
+    let input;
+    if (f.type === "select") {
+      input = `<select id="${id}">${f.options.map((o) => `<option value="${esc(o.value)}"${String(o.value) === String(f.value) ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
+    } else {
+      input = `<input id="${id}" type="${f.type || "text"}"${f.step ? ` step="${f.step}"` : ""}${f.min !== undefined ? ` min="${f.min}"` : ""} value="${esc(f.value)}">`;
+    }
+    return `<div class="field-row"><label for="${id}">${esc(f.label)}</label>${input}${f.hint ? `<div class="sub">${esc(f.hint)}</div>` : ""}</div>`;
+  }).join("");
+  setMsg($("formMsg"), "", "");
+  $("formModal").classList.remove("hidden");
+}
+$("formCancelBtn").addEventListener("click", () => $("formModal").classList.add("hidden"));
+$("formSaveBtn").addEventListener("click", () => withBtn($("formSaveBtn"), async () => {
+  const vals = {};
+  formFields.forEach((f) => { vals[f.id] = $("ff_" + f.id).value; });
+  try {
+    await formHandler(vals);
+    $("formModal").classList.add("hidden");
+    await sync(true);
+  } catch (e) { setMsg($("formMsg"), e.message, "error"); }
+}));
+
+// ---------- Summary (leaders): one card per person; Manage opens everything about them ----------
+const STATUS_OPTS = [{ value: "approved", label: "Approved" }, { value: "pending", label: "Pending" }, { value: "denied", label: "Not approved" }];
+const byName = (a, b) => (a.name || a.email).localeCompare(b.name || b.email);
+const monthIndex = (m) => MONTHS.indexOf(m);
+function sumYear() { return parseInt($("smYear").value, 10) || new Date().getFullYear(); }
+function extrasFor(uid, month, year) { return allExtras.filter((e) => e.memberId === uid && e.month === month && e.year === year); }
+function extrasTotals(list) {
+  return list.reduce((t, e) => ({ days: t.days + e.extraDays, hero: t.hero + e.heroShift, h10: t.h10 + e.hours10, h15: t.h15 + e.hours15 }),
+    { days: 0, hero: 0, h10: 0, h15: 0 });
+}
+function balanceLine(u, kind, year) {
+  const b = balance(u, kind, year);
+  const pend = b.pending ? ` · about ${fmtDays(b.pending)} pending` : "";
+  return `${esc(KIND_LABEL[kind])} ${year}: ${fmtDays(b.used)} of ${fmtDays(b.allot)} used · ${fmtDays(b.left)} left${pend}`;
+}
+function heroList(uid, year) {
+  return requests
+    .filter((r) => r.requesterId === uid && r.kind === "holiday_work" && r.status !== "denied" && String(r.holidayDate).startsWith(String(year)))
+    .sort((a, b) => String(a.holidayDate).localeCompare(String(b.holidayDate)));
+}
+
+function renderSummary() {
+  if (!isLeader) return;
+  const listView = $("sumListView"), detail = $("sumDetailView");
+  if (manageId && usersById[manageId]) {
+    listView.classList.add("hidden");
+    detail.classList.remove("hidden");
+    renderManage();
+    return;
+  }
+  manageId = null;
+  detail.classList.add("hidden");
+  listView.classList.remove("hidden");
+  const month = $("smMonth").value, year = sumYear();
+  const members = users.filter((u) => u.active === "yes").sort(byName);
+  $("sumList").innerHTML = members.map((u) => {
+    const ex = extrasFor(u.id, month, year);
+    const t = extrasTotals(ex);
+    const heroes = heroList(u.id, year);
+    const extrasHtml = ex.length
+      ? `Days ${fmtDays(t.days)} · Hero ${fmtDays(t.hero)} · 1.0x ${fmtDays(t.h10)}h · 1.5x ${fmtDays(t.h15)}h${ex.some((e) => e.enteredBy && e.enteredBy !== u.id) ? " (entered by leader)" : ""}`
+      : '<span class="chip warn">Not logged</span>';
+    return `<div class="card-row">
+      <div class="top-line"><span class="title">${esc(u.name || u.email)}</span><span><span class="chip card">${u.team === "sales" ? "Sales" : "Support"}</span>${u.role === "leader" ? ' <span class="badge approved">Leader</span>' : ""}</span></div>
+      <div class="sub">${balanceLine(u, "pto", year)}</div>
+      <div class="sub">${balanceLine(u, "home_office", year)}</div>
+      <div class="sub">Holidays working ${year}: ${heroes.length ? heroes.map((r) => `${esc(r.holidayName)} (${esc(r.status)})`).join(", ") : "none"}</div>
+      <div class="sub">Extras ${esc(month)} ${year}: ${extrasHtml}</div>
+      <div class="actions"><button class="btn small ghost" data-manage="${esc(u.id)}">Manage</button></div>
+    </div>`;
+  }).join("") || '<p class="empty">No people yet.</p>';
+  $("sumList").querySelectorAll("[data-manage]").forEach((b) => b.addEventListener("click", () => {
+    manageId = b.dataset.manage;
+    renderSummary();
+    window.scrollTo(0, 0);
+  }));
+}
+["smMonth", "smYear"].forEach((id) => $(id).addEventListener("change", () => renderSummary()));
+
+function reqCardHtml(r) {
+  const isHero = r.kind === "holiday_work";
+  const detail = isHero ? esc(fmtDate(r.holidayDate)) : `${esc(datesText(r))} · ${esc(daysLabel(r))}`;
+  return `<div class="card-row">
+    <div class="top-line"><span class="title">${typeLabelOf(r)}</span>${badgeHtml(r.status)}</div>
+    <div class="sub">${detail}</div>
+    ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
+    <div class="actions"><button class="btn small ghost" data-edit-req="${esc(r.id)}">Edit</button><button class="btn small ghost" data-del-req="${esc(r.id)}">Delete</button></div>
+  </div>`;
+}
+function extraCardHtml(e, u) {
+  return `<div class="card-row">
+    <div class="top-line"><span class="title">${esc(e.month)} ${esc(e.year)}</span></div>
+    <div class="sub">Days ${fmtDays(e.extraDays)} · Hero ${fmtDays(e.heroShift)} · 1.0x ${fmtDays(e.hours10)}h · 1.5x ${fmtDays(e.hours15)}h${e.enteredBy && e.enteredBy !== u.id ? " · entered by " + esc(nameOf(e.enteredBy)) : ""}</div>
+    ${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}
+    <div class="actions"><button class="btn small ghost" data-edit-extra="${esc(e.id)}">Edit</button><button class="btn small ghost" data-del-extra="${esc(e.id)}">Delete</button></div>
+  </div>`;
+}
+
+function renderManage() {
+  const u = usersById[manageId];
+  const year = sumYear();
+  const reqs = requests.filter((r) => r.requesterId === u.id).sort((a, b) => String(b.startDate).localeCompare(String(a.startDate)));
+  const exs = allExtras.filter((e) => e.memberId === u.id)
+    .sort((a, b) => (b.year - a.year) || (monthIndex(b.month) - monthIndex(a.month)) || String(b.createdAt).localeCompare(String(a.createdAt)));
+  const el = $("sumDetailView");
+  el.innerHTML = `
+    <button class="btn ghost small" id="mgBack">Back to summary</button>
+    <p class="section-label" style="margin-top:14px;">${esc((u.name || u.email).toUpperCase())} · ${u.team === "sales" ? "SALES" : "SUPPORT"}</p>
+    <div class="sub">${balanceLine(u, "pto", year)}</div>
+    <div class="sub">${balanceLine(u, "home_office", year)}</div>
+    <p class="section-label">TIME OFF AND HOLIDAYS</p>
+    <div class="actions"><button class="btn small" id="mgAddTime">Add time off</button><button class="btn small ghost" id="mgAddHoliday">Assign a holiday</button></div>
+    <div style="margin-top:10px;">${reqs.length ? reqs.map(reqCardHtml).join("") : '<p class="empty">Nothing yet.</p>'}</div>
+    <p class="section-label">EXTRAS</p>
+    <div class="actions"><button class="btn small" id="mgAddExtra">Add extras</button></div>
+    <div style="margin-top:10px;">${exs.length ? exs.map((e) => extraCardHtml(e, u)).join("") : '<p class="empty">No extras logged.</p>'}</div>`;
+
+  $("mgBack").addEventListener("click", () => { manageId = null; renderSummary(); });
+  $("mgAddTime").addEventListener("click", () => { if (needBackend()) addTimeForm(u); });
+  $("mgAddHoliday").addEventListener("click", () => { if (needBackend()) assignHolidayForm(u); });
+  $("mgAddExtra").addEventListener("click", () => { if (needBackend()) extraForm(u, null); });
+  const del = (btn, action, id, what) => {
+    if (!confirm(`Delete this ${what} permanently? This can't be undone.`)) return;
+    withBtn(btn, async () => { try { await api(action, { id }); await sync(true); } catch (e) { alert(e.message); } });
+  };
+  el.querySelectorAll("[data-edit-req]").forEach((b) => b.addEventListener("click", () => { if (needBackend()) editRequestForm(requests.find((r) => r.id === b.dataset.editReq)); }));
+  el.querySelectorAll("[data-del-req]").forEach((b) => b.addEventListener("click", () => { if (needBackend()) del(b, "deleteRequest", b.dataset.delReq, "request"); }));
+  el.querySelectorAll("[data-edit-extra]").forEach((b) => b.addEventListener("click", () => { if (needBackend()) extraForm(u, allExtras.find((e) => e.id === b.dataset.editExtra)); }));
+  el.querySelectorAll("[data-del-extra]").forEach((b) => b.addEventListener("click", () => { if (needBackend()) del(b, "deleteExtra", b.dataset.delExtra, "extras entry"); }));
+}
+
+function editRequestForm(r) {
+  if (!r) return;
+  if (r.kind === "holiday_work") {
+    openForm(`Edit: ${r.holidayName}`, [
+      { id: "status", label: "Status", type: "select", value: r.status, options: STATUS_OPTS, hint: "Choose Not approved to take this person off the holiday." },
+    ], (v) => api("updateRequest", { id: r.id, status: v.status }));
+    return;
+  }
+  openForm(`Edit ${KIND_LABEL[r.kind]}`, [
+    { id: "status", label: "Status", type: "select", value: r.status, options: STATUS_OPTS },
+    { id: "start", label: "Start date", type: "date", value: r.startDate },
+    { id: "end", label: "End date", type: "date", value: r.endDate },
+    { id: "days", label: "Days to deduct", type: "number", step: "0.5", min: 0, value: r.status === "approved" ? chargedDays(r) : "", hint: "Used when approved. Leave empty to use the weekday count." },
+    { id: "note", label: "Note", type: "text", value: r.note },
+  ], (v) => api("updateRequest", {
+    id: r.id, status: v.status, startDate: v.start, endDate: v.end, note: v.note,
+    days: v.days === "" ? undefined : parseFloat(v.days),
+  }));
+}
+function addTimeForm(u) {
+  openForm(`Add time off for ${u.name || u.email}`, [
+    { id: "kind", label: "Type", type: "select", value: "pto", options: [{ value: "pto", label: "PTO" }, { value: "home_office", label: "Home Office" }] },
+    { id: "status", label: "Status", type: "select", value: "approved", options: [{ value: "approved", label: "Approved" }, { value: "pending", label: "Pending" }] },
+    { id: "start", label: "Start date", type: "date", value: "" },
+    { id: "end", label: "End date (empty = one day)", type: "date", value: "" },
+    { id: "days", label: "Days to deduct", type: "number", step: "0.5", min: 0, value: "", hint: "Empty = weekday count." },
+    { id: "note", label: "Note", type: "text", value: "" },
+  ], (v) => api("createRequest", {
+    forUserId: u.id, kind: v.kind, status: v.status, startDate: v.start, endDate: v.end || v.start,
+    days: v.days === "" ? undefined : parseFloat(v.days), note: v.note,
+  }));
+}
+function assignHolidayForm(u) {
+  openForm(`Assign a holiday to ${u.name || u.email}`, [
+    { id: "holiday", label: "Holiday", type: "select", value: US_HOLIDAYS[0].date, options: US_HOLIDAYS.map((h) => ({ value: h.date, label: `${h.name} (${fmtDate(h.date)})` })) },
+    { id: "status", label: "Status", type: "select", value: "approved", options: [{ value: "approved", label: "Approved" }, { value: "pending", label: "Pending" }], hint: `Goes in the ${u.team === "sales" ? "Sales" : "Support"} spot.` },
+  ], (v) => {
+    const h = US_HOLIDAYS.find((x) => x.date === v.holiday);
+    return api("createRequest", { forUserId: u.id, kind: "holiday_work", status: v.status, holidayDate: h.date, holidayName: h.name, startDate: h.date, endDate: h.date });
+  });
+}
+function extraForm(u, e) {
+  const now = new Date();
+  const fields = [
+    { id: "month", label: "Month", type: "select", value: e ? e.month : $("smMonth").value, options: MONTHS.map((m) => ({ value: m, label: m })) },
+    { id: "year", label: "Year", type: "number", value: e ? e.year : (sumYear() || now.getFullYear()) },
+    { id: "days", label: "Extra days", type: "number", step: "1", min: 0, value: e ? e.extraDays : 0 },
+    { id: "hero", label: "Hero shifts", type: "number", step: "1", min: 0, value: e ? e.heroShift : 0 },
+    { id: "h10", label: "Extra hours (1.0x)", type: "number", step: "0.5", min: 0, value: e ? e.hours10 : 0 },
+    { id: "h15", label: "Extra hours (1.5x)", type: "number", step: "0.5", min: 0, value: e ? e.hours15 : 0 },
+    { id: "note", label: "Note", type: "text", value: e ? e.note : "" },
+  ];
+  const payload = (v) => ({
+    month: v.month, year: parseInt(v.year, 10), extraDays: parseFloat(v.days) || 0, heroShift: parseFloat(v.hero) || 0,
+    hours10: parseFloat(v.h10) || 0, hours15: parseFloat(v.h15) || 0, note: v.note,
+  });
+  openForm(e ? "Edit extras" : `Add extras for ${u.name || u.email}`, fields, (v) =>
+    e ? api("updateExtra", Object.assign({ id: e.id }, payload(v))) : api("createExtra", Object.assign({ memberId: u.id }, payload(v))));
+}
 
 // ---------- Pay Calculator: private, runs only in this browser. Nothing is saved or sent. ----------
 const HOURS_PER_MONTH = 173.33, HOURS_PER_DAY = 8, OT_MULT = 1.5, CLEANING_PERCENT = 5;
