@@ -129,6 +129,18 @@
   .link-btn { background: none; border: none; padding: 0; margin-right: 8px; color: var(--brand); cursor: pointer; font-size: 12px; text-decoration: underline; font-family: inherit; }
   .link-btn.danger { color: var(--red); }
   input[type="file"] { font-size: 12px; width: 100%; font-family: inherit; }
+  .subnav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .subtab { font-family: "Space Grotesk", sans-serif; font-size: 12.5px; font-weight: 500; padding: 7px 12px; border-radius: 16px; border: 1px solid var(--rule-strong); background: var(--card); color: var(--brand-dark); cursor: pointer; }
+  .subtab.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .subpanel { display: none; }
+  .subpanel.active { display: block; }
+  .report-sub { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); margin: 16px 0 6px; }
+  .report-note { font-size: 12px; margin: 8px 0 0; }
+  .report-section-row td { font-weight: 700; background: #F1F3F6; text-align: left !important; }
+  .report-subtotal td { font-weight: 600; border-top: 1px solid var(--rule-strong); }
+  #expenseReportTable td:last-child, #expenseReportTable th:last-child { text-align: right; }
+  .card-row a { color: var(--brand); text-decoration: underline; }
+  @media print { .printing .report-sub, .printing .report-note { color: #000 !important; } .printing .report-section-row td { background: #fff !important; } }
 </style>
 </head>
 <body>
@@ -171,10 +183,7 @@
       <button class="tab" data-tab="extras">Log Extras</button>
       <button class="tab" data-tab="paycalc">Pay Calculator</button>
       <button class="tab" data-tab="office">Office Info</button>
-      <button class="tab" data-tab="summary" id="summaryTabBtn" style="display:none;">Summary</button>
-      <button class="tab" data-tab="team" id="teamTabBtn" style="display:none;">Team</button>
-      <button class="tab" data-tab="reimb" id="reimbTabBtn" style="display:none;">Expenses</button>
-      <button class="tab" data-tab="reports" id="reportsTabBtn" style="display:none;">Reports</button>
+      <button class="tab" data-tab="leader" id="leaderTabBtn" style="display:none;">Team Leader</button>
     </div>
 
     <!-- TAB: PTO -->
@@ -223,6 +232,7 @@
     <!-- TAB: Log Extras -->
     <div class="panel" id="panel-extras">
       <p class="admin-note">Log what you worked outside your normal shift this month — it carries into next month's pay.</p>
+      <div id="cleaningInfoBox" class="admin-note hidden"><strong>Sales cleaning subscription</strong><br><span id="cleaningInfoText"></span></div>
       <p class="section-label">NEW ENTRY</p>
       <div class="field-grid">
         <div class="field-row">
@@ -242,6 +252,7 @@
         <div class="field-row"><label for="exH10">Extra Hours (1.0x)</label><input type="number" id="exH10" min="0" step="0.5" value="0"></div>
         <div class="field-row"><label for="exH15">Extra Hours (1.5x)</label><input type="number" id="exH15" min="0" step="0.5" value="0"></div>
       </div>
+      <div id="exCleanRow" class="field-row hidden"><label for="exClean">Cleaning subscription sold (USD)</label><input type="number" id="exClean" min="0" step="0.01" value="0"></div>
       <div class="field-row"><label for="exNote">Note (optional)</label><input type="text" id="exNote"></div>
       <button class="btn" id="exSubmitBtn">Log Entry</button>
       <p class="msg" id="exMsg"></p>
@@ -309,13 +320,24 @@
 
     <!-- TAB: Office Info (everyone reads; leaders edit) -->
     <div class="panel" id="panel-office">
-      <p class="section-label">OFFICE INFO</p>
       <div id="officeViewBlock">
+        <div id="officeCowork"></div>
+        <div id="officeLinks"></div>
+        <p class="section-label">NOTES</p>
         <div id="officeContent" class="card-row" style="white-space:pre-wrap;">Loading…</div>
         <button class="btn ghost small hidden" id="officeEditBtn" style="margin-top:10px;">Edit</button>
       </div>
-      <div id="officeEditBlock" class="hidden" style="margin-top:10px;">
-        <textarea id="officeTextarea" style="min-height:220px;"></textarea>
+      <div id="officeEditBlock" class="hidden">
+        <p class="section-label">COWORKING</p>
+        <div class="field-row"><label for="ofName">Name</label><input type="text" id="ofName"></div>
+        <div class="field-row"><label for="ofAddress">Address</label><input type="text" id="ofAddress"></div>
+        <div class="field-row"><label for="ofMaps">Link for the address (Google Maps)</label><input type="url" id="ofMaps" placeholder="https://"></div>
+        <div class="field-row"><label for="ofInfo">Coworking information link</label><input type="url" id="ofInfo" placeholder="https://"></div>
+        <p class="section-label">LINKS</p>
+        <div class="field-row"><label for="ofHandbook">Policies Handbook link</label><input type="url" id="ofHandbook" placeholder="https://"></div>
+        <div class="field-row"><label for="ofWebsite">Urban Furnished page link</label><input type="url" id="ofWebsite" placeholder="https://"></div>
+        <p class="section-label">NOTES</p>
+        <textarea id="officeTextarea" style="min-height:160px;"></textarea>
         <div class="actions">
           <button class="btn small" id="officeSaveBtn">Save</button>
           <button class="btn ghost small" id="officeCancelBtn">Cancel</button>
@@ -325,7 +347,23 @@
     </div>
 
     <!-- TAB: Summary (leaders only) -->
-    <div class="panel" id="panel-summary">
+    <div class="panel" id="panel-leader">
+      <div class="subnav" id="leaderNav">
+        <button class="subtab active" data-sub="approvals" id="subApprovalsBtn">Approvals</button>
+        <button class="subtab" data-sub="people">People</button>
+        <button class="subtab" data-sub="expenses">Expenses</button>
+        <button class="subtab" data-sub="reports">Reports</button>
+        <button class="subtab" data-sub="accounts">Accounts</button>
+      </div>
+      <div class="subpanel active" id="sub-approvals"><p class="section-label">PENDING APPROVALS</p>
+      <div id="pendingList"><p class="empty">Loading…</p></div>
+
+      <p class="section-label">RECENTLY DECIDED (LAST 3)</p>
+      <p class="rule-note">Full history, with edit and delete, is under People &gt; Manage.</p>
+      <div id="decidedList"><p class="empty">Loading…</p></div>
+
+      </div>
+      <div class="subpanel" id="sub-people">
       <div id="sumListView">
         <p class="admin-note">One card per person. Choose a month to see who has not logged their extras. Open Manage to see, edit or add anything for that person.</p>
         <div class="field-grid">
@@ -336,41 +374,7 @@
       </div>
       <div id="sumDetailView" class="hidden"></div>
     </div>
-
-    <!-- TAB: Team (leaders only) -->
-    <div class="panel" id="panel-team">
-      <div id="backendStatus" class="admin-note"></div>
-      <button class="btn ghost small" id="testMailBtn" style="margin-bottom:14px;">Send test email</button>
-      <p class="section-label">PENDING APPROVALS</p>
-      <div id="pendingList"><p class="empty">Loading…</p></div>
-
-      <p class="section-label">RECENTLY DECIDED</p>
-      <div id="decidedList"><p class="empty">Loading…</p></div>
-
-      <p class="section-label">ADD A PERSON</p>
-      <div class="field-grid">
-        <div class="field-row"><label for="tpName">Name</label><input type="text" id="tpName"></div>
-        <div class="field-row"><label for="tpEmail">Email</label><input type="email" id="tpEmail"></div>
-      </div>
-      <div class="field-grid">
-        <div class="field-row"><label for="tpPass">Temporary password (min 8)</label><input type="text" id="tpPass"></div>
-        <div class="field-row"><label for="tpTeam">Team</label><select id="tpTeam"><option value="support">Support</option><option value="sales">Sales</option></select></div>
-      </div>
-      <div class="field-row"><label for="tpRole">Role</label><select id="tpRole"><option value="member">Member</option><option value="leader">Team Leader</option></select></div>
-      <div class="field-grid">
-        <div class="field-row"><label for="tpPto">PTO days per year</label><input type="number" id="tpPto" value="15" min="0"></div>
-        <div class="field-row"><label for="tpHo">Home Office days per year</label><input type="number" id="tpHo" value="21" min="0"></div>
-      </div>
-      <button class="btn" id="tpAddBtn">Create account</button>
-      <p class="msg" id="tpMsg"></p>
-
-      <p class="section-label">TEAM MEMBERS</p>
-      <p class="rule-note">Each January, add the PTO days a person carries over from last year (up to 5) to their PTO days. Home Office days never carry over.</p>
-      <div id="teamList"><p class="empty">Loading…</p></div>
-    </div>
-
-    <!-- TAB: Reimbursements (leaders only, server-enforced) -->
-    <div class="panel" id="panel-reimb">
+      <div class="subpanel" id="sub-expenses">
       <p class="section-label">LOG AN EXPENSE</p>
       <div class="field-row">
         <label for="rbType">Type</label>
@@ -407,10 +411,8 @@
         </table>
       </div>
     </div>
-
-    <!-- TAB: Reports (leaders only) -->
-    <div class="panel" id="panel-reports">
-      <p class="admin-note">Generate a monthly summary for everyone on the team — ready to print or save as PDF for accounting.</p>
+      <div class="subpanel" id="sub-reports">
+      <p class="admin-note">One monthly report for accounting: extras (with the Sales cleaning subscription) and all expenses, reimbursable and company card, ready to print or save as PDF.</p>
       <p class="section-label">SELECT MONTH</p>
       <div class="field-grid">
         <div class="field-row">
@@ -419,48 +421,71 @@
         </div>
         <div class="field-row"><label for="repYear">Year</label><input type="number" id="repYear" value="2026" step="1"></div>
       </div>
-      <button class="btn" id="repGenerateBtn">Generate Reports</button>
+      <button class="btn" id="repGenerateBtn">Generate report</button>
       <p class="msg" id="repMsg"></p>
 
-      <div id="extrasReportBlock" class="report-block hidden">
+      <div id="reportBlock" class="report-block hidden">
         <div class="report-head">
-          <p class="section-label" style="margin:0;">EXTRAS REPORT — <span id="extrasReportMonth"></span></p>
-          <button class="btn ghost small" id="printExtrasBtn">Print</button>
+          <p class="section-label" style="margin:0;">MONTHLY REPORT — <span id="reportMonth"></span></p>
+          <button class="btn ghost small" id="printReportBtn">Print</button>
         </div>
+        <p class="report-sub">EXTRAS</p>
         <div style="overflow-x:auto;">
           <table id="extrasReportTable">
-            <thead><tr><th>Member</th><th>Extra Days</th><th>Hero Shifts</th><th>Hours (1.0x)</th><th>Hours (1.5x)</th></tr></thead>
+            <thead><tr><th>Person</th><th>Extra Days</th><th>Hero Shifts</th><th>Hours (1.0x)</th><th>Hours (1.5x)</th><th>Cleaning sold</th></tr></thead>
             <tbody id="extrasReportBody"></tbody>
           </table>
         </div>
-      </div>
-
-      <div id="reimbReportBlock" class="report-block hidden">
-        <div class="report-head">
-          <p class="section-label" style="margin:0;">REIMBURSABLE EXPENSES — <span id="reimbReportMonth"></span></p>
-          <button class="btn ghost small" id="printReimbBtn">Print</button>
-        </div>
+        <p class="report-note" id="cleaningReportNote"></p>
+        <p class="report-sub">EXPENSES</p>
         <div style="overflow-x:auto;">
-          <table id="reimbReportTable">
+          <table id="expenseReportTable">
             <thead><tr><th>Person</th><th>Category</th><th>Note</th><th>Ticket</th><th>Amount</th></tr></thead>
-            <tbody id="reimbReportBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="cardReportBlock" class="report-block hidden">
-        <div class="report-head">
-          <p class="section-label" style="margin:0;">COMPANY CARD PURCHASES (NOT REIMBURSABLE) — <span id="cardReportMonth"></span></p>
-          <button class="btn ghost small" id="printCardBtn">Print</button>
-        </div>
-        <div style="overflow-x:auto;">
-          <table id="cardReportTable">
-            <thead><tr><th>Person</th><th>Category</th><th>Note</th><th>Ticket</th><th>Amount</th></tr></thead>
-            <tbody id="cardReportBody"></tbody>
+            <tbody id="expenseReportBody"></tbody>
           </table>
         </div>
       </div>
     </div>
+      <div class="subpanel" id="sub-accounts">
+      <div id="backendStatus" class="admin-note"></div>
+      <button class="btn ghost small" id="testMailBtn" style="margin-bottom:14px;">Send test email</button>
+      
+      <div id="backupStatus" class="admin-note"></div>
+      <div class="actions" style="margin-bottom:16px;">
+        <button class="btn ghost small" id="backupNowBtn">Back up now</button>
+        <button class="btn ghost small" id="scheduleBackupBtn">Schedule weekly backup</button>
+      </div>
+<p class="section-label">ADD A PERSON</p>
+      <div class="field-grid">
+        <div class="field-row"><label for="tpName">Name</label><input type="text" id="tpName"></div>
+        <div class="field-row"><label for="tpEmail">Email</label><input type="email" id="tpEmail"></div>
+      </div>
+      <div class="field-grid">
+        <div class="field-row"><label for="tpPass">Temporary password (min 8)</label><input type="text" id="tpPass"></div>
+        <div class="field-row"><label for="tpTeam">Team</label><select id="tpTeam"><option value="support">Support</option><option value="sales">Sales</option></select></div>
+      </div>
+      <div class="field-row"><label for="tpRole">Role</label><select id="tpRole"><option value="member">Member</option><option value="leader">Team Leader</option></select></div>
+      <div class="field-grid">
+        <div class="field-row"><label for="tpPto">PTO days per year</label><input type="number" id="tpPto" value="15" min="0"></div>
+        <div class="field-row"><label for="tpHo">Home Office days per year</label><input type="number" id="tpHo" value="21" min="0"></div>
+      </div>
+      <button class="btn" id="tpAddBtn">Create account</button>
+      <p class="msg" id="tpMsg"></p>
+
+      <p class="section-label">TEAM MEMBERS</p>
+      <p class="rule-note">Each January, add the PTO days a person carries over from last year (up to 5) to their PTO days. Home Office days never carry over.</p>
+      <div id="teamList"><p class="empty">Loading…</p></div>
+    </div>
+    </div>
+
+    <!-- TAB: Team (leaders only) -->
+    
+
+    <!-- TAB: Reimbursements (leaders only, server-enforced) -->
+    
+
+    <!-- TAB: Reports (leaders only) -->
+    
   </div>
 </div>
 
@@ -492,7 +517,7 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
@@ -520,7 +545,7 @@ const $ = (id) => document.getElementById(id);
 let token = null, me = null, isLeader = false;
 let users = [], usersById = {}, requests = [], myExtras = [], expenses = [], officeText = "";
 let pollTimer = null, pcTeamInit = false;
-let backend = { version: undefined, mail: null }, allExtras = [], manageId = null, formFields = [], formHandler = null;
+let backend = { version: undefined, mail: null }, allExtras = [], manageId = null, formFields = [], formHandler = null, officeLinks = {}, leaderSub = "approvals";
 
 // ---------- helpers ----------
 function esc(s) {
@@ -617,6 +642,7 @@ async function api(action, payload) {
 function activateTab(name) {
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
   document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === "panel-" + name));
+  if (name === "extras" && me && me.team === "sales") loadCleaningInfo();
 }
 $("tabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".tab");
@@ -630,6 +656,7 @@ function showAuth(message) {
   stopPolling();
   clearPayCalc(); // never leave one person's numbers on screen for the next person
   activateTab("pto");
+  activateSub("approvals");
   $("authBox").classList.remove("hidden");
   $("mainApp").classList.add("hidden");
   $("whoamiBar").classList.add("hidden");
@@ -696,17 +723,21 @@ async function sync(force) {
   myExtras = d.myExtras;
   expenses = d.expenses || [];
   officeText = d.office || "";
-  backend = { version: d.version, mail: d.mail || null };
+  backend = { version: d.version, mail: d.mail || null, backup: d.backup || null };
   allExtras = d.allExtras || [];
+  officeLinks = d.officeLinks || {};
   renderAll(!!force);
 }
 
 function renderAll(force) {
   $("whoamiText").textContent = (me.name || me.email) + (isLeader ? " · Team Leader" : "");
-  ["summaryTabBtn", "teamTabBtn", "reimbTabBtn", "reportsTabBtn"].forEach((id) => { $(id).style.display = isLeader ? "" : "none"; });
+  $("leaderTabBtn").style.display = isLeader ? "" : "none";
+  updateLeaderCount();
+  $("exCleanRow").classList.toggle("hidden", me.team !== "sales");
+  $("cleaningInfoBox").classList.toggle("hidden", me.team !== "sales");
   $("officeEditBtn").classList.toggle("hidden", !isLeader);
   const activeTab = document.querySelector(".tab.active");
-  if (!isLeader && activeTab && ["summary", "team", "reimb", "reports"].indexOf(activeTab.dataset.tab) >= 0) activateTab("pto");
+  if (!isLeader && activeTab && ["leader"].indexOf(activeTab.dataset.tab) >= 0) activateTab("pto");
   if (!pcTeamInit) { $("pcTeam").value = me.team || "support"; pcTeamInit = true; calculatePay(); }
   populateMemberSelect();
   renderPtoStats();
@@ -720,6 +751,7 @@ function renderAll(force) {
   renderMyExtras();
   renderExpenses();
   renderOffice();
+  if (me.team === "sales" && $("panel-extras").classList.contains("active")) loadCleaningInfo();
 }
 
 // ---------- change password ----------
@@ -790,6 +822,7 @@ function renderMyRequests() {
       <div class="top-line"><span class="title">${esc(KIND_LABEL[r.kind])}</span>${badgeHtml(r.status)}</div>
       <div class="sub">${esc(datesText(r))} · ${esc(daysLabel(r))}</div>
       ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
+      ${r.status === "pending" ? `<div class="actions"><button class="link-btn danger" data-cancel="${esc(r.id)}">Cancel request</button></div>` : ""}
     </div>`).join("");
 }
 
@@ -811,6 +844,7 @@ function renderHeroShiftList() {
     if (active.length) {
       body = active.map((r) => `<span class="badge ${esc(r.status)}" style="margin-right:4px;">${esc(nameOf(r.requesterId))}</span>`).join("");
       if (mine) body += '<span class="msg" style="margin:0 0 0 4px;">you volunteered</span>';
+      if (mine && mine.status === "pending") body += ` <button class="link-btn danger" data-cancel="${esc(mine.id)}">Cancel</button>`;
     } else if (!past && me.team === team) {
       body = `<button class="btn small" data-date="${esc(h.date)}" data-name="${esc(h.name)}">Volunteer</button>`;
     } else {
@@ -847,12 +881,14 @@ $("exSubmitBtn").addEventListener("click", () => withBtn($("exSubmitBtn"), async
       month: $("exMonth").value, year: parseInt($("exYear").value, 10),
       extraDays: parseFloat($("exDays").value) || 0, heroShift: parseFloat($("exHero").value) || 0,
       hours10: parseFloat($("exH10").value) || 0, hours15: parseFloat($("exH15").value) || 0,
+      cleaningSold: me.team === "sales" ? (parseFloat($("exClean").value) || 0) : 0,
       note: $("exNote").value.trim(),
     });
     setMsg(msg, "Logged. This will show on next month's pay.", "ok");
-    ["exDays", "exHero", "exH10", "exH15"].forEach((id) => { $(id).value = "0"; });
+    ["exDays", "exHero", "exH10", "exH15", "exClean"].forEach((id) => { $(id).value = "0"; });
     $("exNote").value = "";
     await sync(true);
+    loadCleaningInfo();
   } catch (e) { setMsg(msg, e.message, "error"); }
 }));
 
@@ -862,7 +898,7 @@ function renderMyExtras() {
   el.innerHTML = myExtras.map((e) => `
     <div class="card-row">
       <div class="top-line"><span class="title">${esc(e.month)} ${esc(e.year)}</span></div>
-      <div class="sub">Days: ${e.extraDays} · Hero Shifts: ${e.heroShift} · 1.0x: ${e.hours10}h · 1.5x: ${e.hours15}h${e.enteredBy && e.enteredBy !== me.id ? " · entered by your team leader" : ""}</div>
+      <div class="sub">Days: ${e.extraDays} · Hero Shifts: ${e.heroShift} · 1.0x: ${e.hours10}h · 1.5x: ${e.hours15}h${e.cleaningSold > 0 ? " · Cleaning sold: " + fmtMoney(e.cleaningSold) : ""}${e.enteredBy && e.enteredBy !== me.id ? " · entered by your team leader" : ""}</div>
       ${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}
     </div>`).join("");
 }
@@ -946,7 +982,7 @@ function renderDecided() {
   const el = $("decidedList");
   if (!isLeader) { el.innerHTML = ""; return; }
   const decided = requests.filter((r) => r.status !== "pending")
-    .sort((a, b) => String(b.reviewedAt).localeCompare(String(a.reviewedAt))).slice(0, 15);
+    .sort((a, b) => String(b.reviewedAt).localeCompare(String(a.reviewedAt))).slice(0, 3);
   if (!decided.length) { el.innerHTML = '<p class="empty">Nothing decided yet.</p>'; return; }
   el.innerHTML = decided.map((r) => {
     const counted = r.kind !== "holiday_work" && r.status === "approved";
@@ -1014,7 +1050,8 @@ function renderTeamList(force) {
         <button class="btn small ghost" data-save="${esc(u.id)}">Save</button>
         <button class="btn small ghost" data-reset="${esc(u.id)}">Reset password</button>
         ${u.id !== me.id ? `<button class="btn small ghost" data-role="${esc(u.id)}" data-current="${esc(u.role)}">${u.role === "leader" ? "Make Member" : "Make Leader"}</button>
-        <button class="btn small ghost" data-active="${esc(u.id)}" data-current="${esc(u.active)}">${inactive ? "Reactivate" : "Deactivate"}</button>` : ""}
+        <button class="btn small ghost" data-active="${esc(u.id)}" data-current="${esc(u.active)}">${inactive ? "Reactivate" : "Deactivate"}</button>
+        <button class="btn small ghost" data-delete="${esc(u.id)}" style="color:var(--red);">Delete</button>` : ""}
       </div>
     </div>`;
   }).join("");
@@ -1147,51 +1184,82 @@ async function openTicket(id) {
   }
 }
 
-// ---------- Reports (leaders) ----------
+// ---------- Team Leader area: sections ----------
+function activateSub(name) {
+  leaderSub = name;
+  document.querySelectorAll(".subtab").forEach((t) => t.classList.toggle("active", t.dataset.sub === name));
+  document.querySelectorAll(".subpanel").forEach((p) => p.classList.toggle("active", p.id === "sub-" + name));
+}
+$("leaderNav").addEventListener("click", (e) => {
+  const b = e.target.closest(".subtab");
+  if (b) activateSub(b.dataset.sub);
+});
+function updateLeaderCount() {
+  const n = requests.filter((r) => r.status === "pending").length;
+  $("leaderTabBtn").textContent = "Team Leader" + (n ? ` (${n})` : "");
+  $("subApprovalsBtn").textContent = "Approvals" + (n ? ` (${n})` : "");
+}
+
+// ---------- Reports (leaders): one monthly report with extras and expenses together ----------
 $("repGenerateBtn").addEventListener("click", () => withBtn($("repGenerateBtn"), async () => {
   const msg = $("repMsg");
   setMsg(msg, "", "");
   const month = $("repMonth").value, year = parseInt($("repYear").value, 10);
-  const label = `${month} ${year}`;
   try {
     const d = await api("report", { month, year });
-    renderExtrasReport(d.extras, label);
-    renderExpenseReport(d.expenses.filter((x) => x.paymentType !== "company_card"), "reimb", label, "No reimbursable expenses logged for this month.");
-    renderExpenseReport(d.expenses.filter((x) => x.paymentType === "company_card"), "card", label, "No company card purchases logged for this month.");
-    ["extrasReportBlock", "reimbReportBlock", "cardReportBlock"].forEach((id) => $(id).classList.remove("hidden"));
+    $("reportMonth").textContent = `${month} ${year}`;
+    renderExtrasReport(d.extras, d.cleaning);
+    renderExpenseReport(d.expenses);
+    $("reportBlock").classList.remove("hidden");
   } catch (e) { setMsg(msg, e.message, "error"); }
 }));
 
-function renderExtrasReport(rows, label) {
-  $("extrasReportMonth").textContent = label;
+function renderExtrasReport(rows, cleaning) {
   const body = $("extrasReportBody");
   const by = {};
   rows.forEach((r) => {
-    const v = by[r.memberId] || (by[r.memberId] = { extraDays: 0, heroShift: 0, hours10: 0, hours15: 0 });
+    const v = by[r.memberId] || (by[r.memberId] = { extraDays: 0, heroShift: 0, hours10: 0, hours15: 0, cleaningSold: 0 });
     v.extraDays += r.extraDays; v.heroShift += r.heroShift; v.hours10 += r.hours10; v.hours15 += r.hours15;
+    v.cleaningSold += r.cleaningSold || 0;
   });
+  const note = $("cleaningReportNote");
+  note.textContent = cleaning && cleaning.total > 0
+    ? `Cleaning subscription (Sales): ${fmtMoney(cleaning.total)} sold · ${cleaning.percent}% pool ${fmtMoney(cleaning.pool)} · ${cleaning.count} Sales people · ${fmtMoney(cleaning.perPerson)} each.`
+    : "No cleaning subscription logged for this month.";
   const ids = Object.keys(by).sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
-  if (!ids.length) { body.innerHTML = '<tr><td colspan="5" class="empty">No entries logged for this month.</td></tr>'; return; }
-  const t = { extraDays: 0, heroShift: 0, hours10: 0, hours15: 0 };
+  if (!ids.length) { body.innerHTML = '<tr><td colspan="6" class="empty">No extras logged for this month.</td></tr>'; return; }
+  const t = { extraDays: 0, heroShift: 0, hours10: 0, hours15: 0, cleaningSold: 0 };
+  const money = (n) => (n > 0 ? fmtMoney(n) : "");
   const html = ids.map((id) => {
     const v = by[id];
     Object.keys(t).forEach((k) => { t[k] += v[k]; });
-    return `<tr><td>${esc(nameOf(id))}</td><td>${v.extraDays}</td><td>${v.heroShift}</td><td>${v.hours10}h</td><td>${v.hours15}h</td></tr>`;
+    return `<tr><td>${esc(nameOf(id))}</td><td>${fmtDays(v.extraDays)}</td><td>${fmtDays(v.heroShift)}</td><td>${fmtDays(v.hours10)}h</td><td>${fmtDays(v.hours15)}h</td><td>${money(v.cleaningSold)}</td></tr>`;
   }).join("");
-  body.innerHTML = html + `<tr class="report-total-row"><td>Total</td><td>${t.extraDays}</td><td>${t.heroShift}</td><td>${t.hours10}h</td><td>${t.hours15}h</td></tr>`;
+  body.innerHTML = html + `<tr class="report-total-row"><td>Total</td><td>${fmtDays(t.extraDays)}</td><td>${fmtDays(t.heroShift)}</td><td>${fmtDays(t.hours10)}h</td><td>${fmtDays(t.hours15)}h</td><td>${money(t.cleaningSold)}</td></tr>`;
 }
 
-function renderExpenseReport(rows, which, label, emptyText) {
-  $(which + "ReportMonth").textContent = label;
-  const body = $(which + "ReportBody");
-  if (!rows.length) { body.innerHTML = `<tr><td colspan="5" class="empty">${esc(emptyText)}</td></tr>`; return; }
-  const sorted = rows.slice().sort((a, b) => nameOf(a.memberId).localeCompare(nameOf(b.memberId)));
-  let total = 0;
-  const html = sorted.map((r) => {
-    total += r.amount || 0;
-    return `<tr><td>${esc(r.memberId ? nameOf(r.memberId) : "None")}</td><td>${esc(r.category)}</td><td>${esc(r.note)}</td><td>${r.ticketFileId ? "Yes" : ""}</td><td class="amount">${fmtMoney(r.amount)}</td></tr>`;
-  }).join("");
-  body.innerHTML = html + `<tr class="report-total-row"><td colspan="4">Total</td><td class="amount">${fmtMoney(total)}</td></tr>`;
+// Reimbursable first, grouped by person with a subtotal each; then company card; then one grand total.
+function renderExpenseReport(rows) {
+  const body = $("expenseReportBody");
+  const reimb = rows.filter((x) => x.paymentType !== "company_card");
+  const card = rows.filter((x) => x.paymentType === "company_card");
+  const sum = (list) => list.reduce((s, x) => s + (x.amount || 0), 0);
+  const line = (r) => `<tr><td>${esc(r.memberId ? nameOf(r.memberId) : "None")}</td><td>${esc(r.category)}</td><td>${esc(r.note)}</td><td>${r.ticketFileId ? "Yes" : ""}</td><td class="amount">${fmtMoney(r.amount)}</td></tr>`;
+  let html = '<tr class="report-section-row"><td colspan="5">Reimbursable (to pay to people)</td></tr>';
+  if (!reimb.length) html += '<tr><td colspan="5" class="empty">None logged.</td></tr>';
+  const byPerson = {};
+  reimb.forEach((r) => { (byPerson[r.memberId] = byPerson[r.memberId] || []).push(r); });
+  Object.keys(byPerson).sort((a, b) => nameOf(a).localeCompare(nameOf(b))).forEach((id) => {
+    html += byPerson[id].map(line).join("");
+    html += `<tr class="report-subtotal"><td colspan="4">Subtotal: ${esc(nameOf(id))}</td><td class="amount">${fmtMoney(sum(byPerson[id]))}</td></tr>`;
+  });
+  html += `<tr class="report-total-row"><td colspan="4">Total reimbursable</td><td class="amount">${fmtMoney(sum(reimb))}</td></tr>`;
+  html += '<tr class="report-section-row"><td colspan="5">Company card (not reimbursable)</td></tr>';
+  if (!card.length) html += '<tr><td colspan="5" class="empty">None logged.</td></tr>';
+  html += card.slice().sort((a, b) => nameOf(a.memberId).localeCompare(nameOf(b.memberId)) || a.category.localeCompare(b.category)).map(line).join("");
+  html += `<tr class="report-total-row"><td colspan="4">Total company card</td><td class="amount">${fmtMoney(sum(card))}</td></tr>`;
+  html += `<tr class="report-total-row"><td colspan="4">Grand total, all expenses</td><td class="amount">${fmtMoney(sum(rows))}</td></tr>`;
+  body.innerHTML = html;
 }
 
 function printReport(blockId) {
@@ -1204,23 +1272,82 @@ window.addEventListener("afterprint", () => {
   document.body.classList.remove("printing");
   document.querySelectorAll(".report-block").forEach((el) => el.classList.remove("print-target"));
 });
-$("printExtrasBtn").addEventListener("click", () => printReport("extrasReportBlock"));
-$("printReimbBtn").addEventListener("click", () => printReport("reimbReportBlock"));
-$("printCardBtn").addEventListener("click", () => printReport("cardReportBlock"));
+$("printReportBtn").addEventListener("click", () => printReport("reportBlock"));
+
+// ---------- Cancel a pending request (members) ----------
+async function cancelRequest(id, btn) {
+  if (!confirm("Cancel this request? Your team leader will be told.")) return;
+  await withBtn(btn, async () => {
+    try { await api("cancelRequest", { id }); await sync(true); } catch (e) { alert(e.message); }
+  });
+}
+$("myRequestsList").addEventListener("click", (e) => { const b = e.target.closest("[data-cancel]"); if (b) cancelRequest(b.dataset.cancel, b); });
+$("heroShiftList").addEventListener("click", (e) => { const b = e.target.closest("[data-cancel]"); if (b) cancelRequest(b.dataset.cancel, b); });
+
+// ---------- Sales cleaning subscription ----------
+async function loadCleaningInfo() {
+  if (!me || me.team !== "sales") return;
+  const month = $("exMonth").value, year = parseInt($("exYear").value, 10);
+  try {
+    const c = await api("cleaningInfo", { month, year });
+    $("cleaningInfoText").textContent = `${month} ${year}: Sales team total ${fmtMoney(c.total)} · ${c.percent}% pool ${fmtMoney(c.pool)} · ${c.count} Sales people · your share ${fmtMoney(c.perPerson)} · you logged ${fmtMoney(c.mine)}`;
+  } catch (e) { $("cleaningInfoText").textContent = ""; }
+}
+["exMonth", "exYear"].forEach((id) => $(id).addEventListener("change", loadCleaningInfo));
+
+// ---------- Delete a person (leaders): shows what goes with them, asks for their name ----------
+async function deleteUserFlow(uid, btn) {
+  if (!needBackend()) return;
+  await withBtn(btn, async () => {
+    let pv;
+    try { pv = await api("userDeletePreview", { userId: uid }); } catch (e) { alert(e.message); return; }
+    const c = pv.counts;
+    const typed = prompt([
+      `Delete ${pv.name} permanently?`, "",
+      "This also removes:",
+      `- ${c.requests} request(s)`,
+      `- ${c.extras} extras ${c.extras === 1 ? "entry" : "entries"}`,
+      `- ${c.expenses} expense(s) (${c.tickets} ticket file(s) go to the Drive trash)`, "",
+      "This cannot be undone. Type their name to confirm:",
+    ].join("\n"));
+    if (typed === null) return;
+    try { await api("deleteUser", { userId: uid, confirmName: typed }); await sync(true); } catch (e) { alert(e.message); }
+  });
+}
+$("teamList").addEventListener("click", (e) => { const b = e.target.closest("[data-delete]"); if (b) deleteUserFlow(b.dataset.delete, b); });
+
+// ---------- Backups (leaders) ----------
+$("backupNowBtn").addEventListener("click", () => withBtn($("backupNowBtn"), async () => {
+  if (!needBackend()) return;
+  try {
+    const d = await api("backupNow");
+    alert(`Backup saved: ${d.name}. It is in the "UF HR Backups" folder in your Drive.`);
+  } catch (e) { alert(e.message); }
+  await sync(true).catch(() => {});
+}));
+$("scheduleBackupBtn").addEventListener("click", () => withBtn($("scheduleBackupBtn"), async () => {
+  if (!needBackend()) return;
+  try {
+    await api("scheduleBackup");
+    alert("Done. A backup will be saved every Monday morning, keeping the newest 8.");
+  } catch (e) { alert(e.message); }
+  await sync(true).catch(() => {});
+}));
 
 // ---------- Backend status + email test (leaders) ----------
-function backendOk() { return backend.version !== undefined && backend.version >= 3; }
+function backendOk() { return backend.version !== undefined && backend.version >= 4; }
 function needBackend() {
   if (backendOk()) return true;
   alert("The backend is out of date. Paste the newest Code.gs into Apps Script, run authorize and setup, then Deploy > Manage deployments > New version. The Team tab explains it.");
   return false;
 }
 function renderBackendStatus() {
-  const el = $("backendStatus");
-  if (!isLeader) { el.innerHTML = ""; return; }
+  const el = $("backendStatus"), bkEl = $("backupStatus");
+  if (!isLeader) { el.innerHTML = ""; bkEl.innerHTML = ""; return; }
   if (!backendOk()) {
     el.innerHTML = "<strong>Your backend is out of date.</strong> Paste the newest Code.gs into Apps Script, run <em>authorize</em> and <em>setup</em>, then Deploy > Manage deployments > pencil > New version > Deploy.";
     el.style.color = "var(--red)";
+    bkEl.innerHTML = "";
     return;
   }
   el.style.color = "";
@@ -1231,6 +1358,14 @@ function renderBackendStatus() {
   else if (m.lastOkAt) mailLine = `Request emails go to ${esc(m.notifyEmail)}. The last one was sent ${esc(new Date(m.lastOkAt).toLocaleString())}.`;
   else mailLine = `Request emails go to ${esc(m.notifyEmail)}. None sent yet: use "Send test email".`;
   el.innerHTML = `Backend version ${esc(backend.version)} · ${mailLine}${m.quota != null ? ` · ${esc(m.quota)} emails left today` : ""}${m.notifyMembers === false ? " · Members are not emailed about decisions." : ""}`;
+  const bk = backend.backup || {};
+  let line;
+  if (bk.lastError) line = `<span style="color:var(--red)">The last backup failed: ${esc(bk.lastError)}</span>`;
+  else if (bk.lastOkAt) line = `Last backup: ${esc(bk.lastName)}, saved ${esc(new Date(bk.lastOkAt).toLocaleString())}.`;
+  else line = "No backup yet.";
+  if (bk.scheduled === true) line += " Weekly backup is scheduled (Mondays).";
+  else if (bk.scheduled === false) line += " Weekly backup is not scheduled yet.";
+  bkEl.innerHTML = line;
 }
 $("testMailBtn").addEventListener("click", () => withBtn($("testMailBtn"), async () => {
   if (!needBackend()) return;
@@ -1277,8 +1412,8 @@ const monthIndex = (m) => MONTHS.indexOf(m);
 function sumYear() { return parseInt($("smYear").value, 10) || new Date().getFullYear(); }
 function extrasFor(uid, month, year) { return allExtras.filter((e) => e.memberId === uid && e.month === month && e.year === year); }
 function extrasTotals(list) {
-  return list.reduce((t, e) => ({ days: t.days + e.extraDays, hero: t.hero + e.heroShift, h10: t.h10 + e.hours10, h15: t.h15 + e.hours15 }),
-    { days: 0, hero: 0, h10: 0, h15: 0 });
+  return list.reduce((t, e) => ({ days: t.days + e.extraDays, hero: t.hero + e.heroShift, h10: t.h10 + e.hours10, h15: t.h15 + e.hours15, clean: t.clean + (e.cleaningSold || 0) }),
+    { days: 0, hero: 0, h10: 0, h15: 0, clean: 0 });
 }
 function balanceLine(u, kind, year) {
   const b = balance(u, kind, year);
@@ -1310,7 +1445,7 @@ function renderSummary() {
     const t = extrasTotals(ex);
     const heroes = heroList(u.id, year);
     const extrasHtml = ex.length
-      ? `Days ${fmtDays(t.days)} · Hero ${fmtDays(t.hero)} · 1.0x ${fmtDays(t.h10)}h · 1.5x ${fmtDays(t.h15)}h${ex.some((e) => e.enteredBy && e.enteredBy !== u.id) ? " (entered by leader)" : ""}`
+      ? `Days ${fmtDays(t.days)} · Hero ${fmtDays(t.hero)} · 1.0x ${fmtDays(t.h10)}h · 1.5x ${fmtDays(t.h15)}h${t.clean > 0 ? " · Cleaning " + fmtMoney(t.clean) : ""}${ex.some((e) => e.enteredBy && e.enteredBy !== u.id) ? " (entered by leader)" : ""}`
       : '<span class="chip warn">Not logged</span>';
     return `<div class="card-row">
       <div class="top-line"><span class="title">${esc(u.name || u.email)}</span><span><span class="chip card">${u.team === "sales" ? "Sales" : "Support"}</span>${u.role === "leader" ? ' <span class="badge approved">Leader</span>' : ""}</span></div>
@@ -1342,7 +1477,7 @@ function reqCardHtml(r) {
 function extraCardHtml(e, u) {
   return `<div class="card-row">
     <div class="top-line"><span class="title">${esc(e.month)} ${esc(e.year)}</span></div>
-    <div class="sub">Days ${fmtDays(e.extraDays)} · Hero ${fmtDays(e.heroShift)} · 1.0x ${fmtDays(e.hours10)}h · 1.5x ${fmtDays(e.hours15)}h${e.enteredBy && e.enteredBy !== u.id ? " · entered by " + esc(nameOf(e.enteredBy)) : ""}</div>
+    <div class="sub">Days ${fmtDays(e.extraDays)} · Hero ${fmtDays(e.heroShift)} · 1.0x ${fmtDays(e.hours10)}h · 1.5x ${fmtDays(e.hours15)}h${e.cleaningSold > 0 ? " · Cleaning " + fmtMoney(e.cleaningSold) : ""}${e.enteredBy && e.enteredBy !== u.id ? " · entered by " + esc(nameOf(e.enteredBy)) : ""}</div>
     ${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}
     <div class="actions"><button class="btn small ghost" data-edit-extra="${esc(e.id)}">Edit</button><button class="btn small ghost" data-del-extra="${esc(e.id)}">Delete</button></div>
   </div>`;
@@ -1431,11 +1566,12 @@ function extraForm(u, e) {
     { id: "hero", label: "Hero shifts", type: "number", step: "1", min: 0, value: e ? e.heroShift : 0 },
     { id: "h10", label: "Extra hours (1.0x)", type: "number", step: "0.5", min: 0, value: e ? e.hours10 : 0 },
     { id: "h15", label: "Extra hours (1.5x)", type: "number", step: "0.5", min: 0, value: e ? e.hours15 : 0 },
+    ...(u.team === "sales" ? [{ id: "clean", label: "Cleaning subscription sold (USD)", type: "number", step: "0.01", min: 0, value: e ? e.cleaningSold : 0 }] : []),
     { id: "note", label: "Note", type: "text", value: e ? e.note : "" },
   ];
   const payload = (v) => ({
     month: v.month, year: parseInt(v.year, 10), extraDays: parseFloat(v.days) || 0, heroShift: parseFloat(v.hero) || 0,
-    hours10: parseFloat(v.h10) || 0, hours15: parseFloat(v.h15) || 0, note: v.note,
+    hours10: parseFloat(v.h10) || 0, hours15: parseFloat(v.h15) || 0, cleaningSold: parseFloat(v.clean) || 0, note: v.note,
   });
   openForm(e ? "Edit extras" : `Add extras for ${u.name || u.email}`, fields, (v) =>
     e ? api("updateExtra", Object.assign({ id: e.id }, payload(v))) : api("createExtra", Object.assign({ memberId: u.id }, payload(v))));
@@ -1480,22 +1616,53 @@ function calculatePay() {
 PC_INPUTS.concat(["pcCleaningCount"]).forEach((id) => $(id).addEventListener("input", calculatePay));
 $("pcTeam").addEventListener("change", calculatePay);
 
-$("pcLoadBtn").addEventListener("click", () => {
+// ---------- Pay Calculator: "Fill from my logged extras" (also fills the Sales cleaning subscription) ----------
+$("pcLoadBtn").addEventListener("click", () => withBtn($("pcLoadBtn"), async () => {
   const month = $("pcMonth").value, year = parseInt($("pcYear").value, 10);
   const rows = myExtras.filter((e) => e.month === month && e.year === year);
   const sum = (k) => rows.reduce((a, e) => a + e[k], 0);
   $("pcDays").value = sum("extraDays"); $("pcHero").value = sum("heroShift");
   $("pcH10").value = sum("hours10"); $("pcH15").value = sum("hours15");
+  let extra = "";
+  if ($("pcTeam").value === "sales" && (me.team === "sales" || isLeader)) {
+    try {
+      const c = await api("cleaningInfo", { month, year });
+      $("pcCleaningTotal").value = c.total;
+      $("pcCleaningCount").value = c.count > 0 ? c.count : 1;
+      extra = ` Cleaning subscription: Sales team total ${fmtMoney(c.total)}, ${c.count} Sales people.`;
+    } catch (e) { /* leave the cleaning fields as they are */ }
+  }
   calculatePay();
-  if (rows.length) setMsg($("pcMsg"), `Filled in from ${rows.length} logged entr${rows.length === 1 ? "y" : "ies"}. You can still edit the numbers.`, "ok");
-  else setMsg($("pcMsg"), "You haven't logged any extras for that month.", "error");
-});
+  if (rows.length) setMsg($("pcMsg"), `Filled in from ${rows.length} logged entr${rows.length === 1 ? "y" : "ies"}. You can still edit the numbers.${extra}`, "ok");
+  else setMsg($("pcMsg"), `You haven't logged any extras for that month.${extra}`, "error");
+}));
 
 // ---------- Office Info ----------
+function linkHtml(url, text) {
+  return url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text)}</a>` : "";
+}
 function renderOffice() {
   if (!$("officeEditBlock").classList.contains("hidden")) return; // don't overwrite while editing
+  const L = officeLinks || {};
+  let cow = "";
+  if (L.coworkingName || L.coworkingAddress || L.coworkingInfoUrl) {
+    const addr = L.coworkingAddress ? (L.coworkingMapsUrl ? linkHtml(L.coworkingMapsUrl, L.coworkingAddress) + " (opens Maps)" : esc(L.coworkingAddress)) : "";
+    cow = `<div class="card-row">
+      <div class="top-line"><span class="title">${esc(L.coworkingName || "Coworking")}</span></div>
+      ${addr ? `<div class="sub">${addr}</div>` : ""}
+      ${L.coworkingInfoUrl ? `<div class="sub">${linkHtml(L.coworkingInfoUrl, "Coworking information")}</div>` : ""}
+    </div>`;
+  }
+  $("officeCowork").innerHTML = cow ? `<p class="section-label">COWORKING</p>${cow}` : "";
+  const entries = [[L.handbookUrl, "Policies Handbook"], [L.websiteUrl, "Urban Furnished"]];
+  const shown = entries.map(([url, text]) =>
+    url ? `<div class="sub">${linkHtml(url, text)}</div>` : (isLeader ? `<div class="sub" style="color:var(--muted);">${esc(text)}: not set yet (use Edit)</div>` : "")).join("");
+  $("officeLinks").innerHTML = shown.trim() ? `<p class="section-label">LINKS</p><div class="card-row">${shown}</div>` : "";
   $("officeContent").textContent = officeText || "Nothing here yet.";
   $("officeTextarea").value = officeText;
+  $("ofName").value = L.coworkingName || ""; $("ofAddress").value = L.coworkingAddress || "";
+  $("ofMaps").value = L.coworkingMapsUrl || ""; $("ofInfo").value = L.coworkingInfoUrl || "";
+  $("ofHandbook").value = L.handbookUrl || ""; $("ofWebsite").value = L.websiteUrl || "";
 }
 $("officeEditBtn").addEventListener("click", () => {
   $("officeViewBlock").classList.add("hidden");
@@ -1504,13 +1671,20 @@ $("officeEditBtn").addEventListener("click", () => {
 $("officeCancelBtn").addEventListener("click", () => {
   $("officeEditBlock").classList.add("hidden");
   $("officeViewBlock").classList.remove("hidden");
+  setMsg($("officeMsg"), "", "");
   renderOffice();
 });
 $("officeSaveBtn").addEventListener("click", () => withBtn($("officeSaveBtn"), async () => {
   try {
-    await api("setOffice", { content: $("officeTextarea").value });
+    await api("setOffice", {
+      content: $("officeTextarea").value,
+      coworkingName: $("ofName").value, coworkingAddress: $("ofAddress").value,
+      coworkingMapsUrl: $("ofMaps").value, coworkingInfoUrl: $("ofInfo").value,
+      handbookUrl: $("ofHandbook").value, websiteUrl: $("ofWebsite").value,
+    });
     $("officeEditBlock").classList.add("hidden");
     $("officeViewBlock").classList.remove("hidden");
+    setMsg($("officeMsg"), "", "");
     await sync(true);
   } catch (e) { setMsg($("officeMsg"), e.message, "error"); }
 }));
