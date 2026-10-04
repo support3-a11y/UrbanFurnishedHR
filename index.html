@@ -141,6 +141,16 @@
   #expenseReportTable td:last-child, #expenseReportTable th:last-child { text-align: right; }
   .card-row a { color: var(--brand); text-decoration: underline; }
   @media print { .printing .report-sub, .printing .report-note { color: #000 !important; } .printing .report-section-row td { background: #fff !important; } }
+  #rbConvert, #rbRateInfo, #rbBudgetPreview, #rbPendingTotal { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--muted); margin: 4px 0 8px; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 2px 10px; min-width: 92px; }
+  .row-actions .link-btn { margin-right: 0; text-align: left; }
+  #rbTable .sub { font-size: 11px; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+  #budgetReportTable td:nth-child(n+2), #budgetReportTable th:nth-child(n+2),
+  #categoryReportTable td:nth-child(n+2), #categoryReportTable th:nth-child(n+2),
+  #reimbReportTable td:nth-child(n+6), #reimbReportTable th:nth-child(n+6),
+  #pendingReportTable td:nth-child(n+5), #pendingReportTable th:nth-child(n+5),
+  #cardReportTable td:last-child, #cardReportTable th:last-child { text-align: right; }
+  #reimbReportTable, #pendingReportTable, #cardReportTable, #categoryReportTable, #budgetReportTable { font-size: 11.5px; }
 </style>
 </head>
 <body>
@@ -375,44 +385,65 @@
       <div id="sumDetailView" class="hidden"></div>
     </div>
       <div class="subpanel" id="sub-expenses">
-      <p class="section-label">LOG AN EXPENSE</p>
-      <div class="field-row">
-        <label for="rbType">Type</label>
-        <select id="rbType">
-          <option value="reimbursable">Reimbursable (a person paid; the company owes them)</option>
-          <option value="company_card">Company card (not reimbursable)</option>
-        </select>
-      </div>
-      <div class="field-row"><label for="rbMember" id="rbMemberLabel">Person</label><select id="rbMember"></select></div>
+      <div id="budgetStrip" class="admin-note"></div>
+      <p class="section-label" id="rbFormTitle">LOG AN EXPENSE</p>
       <div class="field-grid">
-        <div class="field-row"><label for="rbMonth">Month</label><select id="rbMonth"></select></div>
-        <div class="field-row"><label for="rbYear">Year</label><input type="number" id="rbYear" value="2026" step="1"></div>
+        <div class="field-row">
+          <label for="rbType">Type</label>
+          <select id="rbType">
+            <option value="reimbursable">Reimbursable (I paid, to be returned)</option>
+            <option value="company_card">Company card (not reimbursable)</option>
+          </select>
+        </div>
+        <div class="field-row"><label for="rbDate">Purchase date</label><input type="date" id="rbDate"></div>
       </div>
       <div class="field-grid">
         <div class="field-row">
           <label for="rbCategory">Category</label>
           <select id="rbCategory">
             <option>Office Budget</option><option>Office Utilities</option><option>Office Cleaning</option>
-            <option>Equipment</option><option>Cleaning Subscription</option><option>Other</option>
+            <option>Equipment</option><option>Monthly meal</option><option>Other</option>
           </select>
         </div>
-        <div class="field-row"><label for="rbAmount">Amount (USD)</label><input type="number" id="rbAmount" min="0" step="0.01" value="0"></div>
+        <div class="field-row">
+          <label for="rbCurrency">Currency</label>
+          <select id="rbCurrency"><option value="ARS">Pesos (ARS)</option><option value="USD">US dollars (USD)</option></select>
+        </div>
       </div>
+      <div class="field-grid">
+        <div class="field-row"><label for="rbAmount">Amount</label><input type="number" id="rbAmount" min="0" step="0.01" inputmode="decimal"></div>
+        <div class="field-row"><label for="rbRate">Rate (pesos per US$)</label><input type="number" id="rbRate" min="0" step="0.01" inputmode="decimal"></div>
+      </div>
+      <p class="sub" id="rbConvert"></p>
+      <p class="sub" id="rbRateInfo"></p>
+      <p class="sub" id="rbBudgetPreview"></p>
       <div class="field-row"><label for="rbNote">Note</label><input type="text" id="rbNote"></div>
       <div class="field-row"><label for="rbFile">Ticket: photo or PDF (optional)</label><input type="file" id="rbFile" accept="image/*,application/pdf"></div>
       <button class="btn" id="rbSubmitBtn">Log expense</button>
+      <button class="btn ghost small hidden" id="rbCancelEditBtn" style="margin-top:8px;">Cancel editing</button>
       <p class="msg" id="rbMsg"></p>
 
+      <p class="section-label">REIMBURSEMENT</p>
+      <p class="rule-note">Reimbursable expenses stay Pending until you record the day the money was returned. That day can be later than the purchase, for example at the end of the month.</p>
+      <div class="field-grid">
+        <div class="field-row"><label for="rbUpTo">Pending purchases up to</label><input type="date" id="rbUpTo"></div>
+        <div class="field-row"><label for="rbPaidOn">Money returned on</label><input type="date" id="rbPaidOn"></div>
+      </div>
+      <button class="btn ghost" id="rbMarkAllBtn">Mark all pending up to that date as reimbursed</button>
+      <p class="msg" id="rbMarkMsg"></p>
+
       <p class="section-label">LOGGED EXPENSES</p>
+      <div class="field-row"><label for="rbFilter">Show</label><select id="rbFilter"><option value="all">All</option><option value="pending">Pending reimbursement</option></select></div>
+      <p class="sub" id="rbPendingTotal"></p>
       <div style="overflow-x:auto;">
         <table id="rbTable">
-          <thead><tr><th>Person</th><th>Month</th><th>Type</th><th>Category</th><th>Amount</th><th></th></tr></thead>
-          <tbody id="rbTableBody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          <thead><tr><th>Date</th><th>Details</th><th>Status</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="rbTableBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
       <div class="subpanel" id="sub-reports">
-      <p class="admin-note">One monthly report for accounting: extras (with the Sales cleaning subscription) and all expenses, reimbursable and company card, ready to print or save as PDF.</p>
+      <p class="admin-note">One monthly report for accounting: extras, budgets, spending by category, what was reimbursed, what is still pending and company card purchases. Ready to print or save as PDF.</p>
       <p class="section-label">SELECT MONTH</p>
       <div class="field-grid">
         <div class="field-row">
@@ -437,13 +468,49 @@
           </table>
         </div>
         <p class="report-note" id="cleaningReportNote"></p>
-        <p class="report-sub">EXPENSES</p>
+
+        <p class="report-sub">BUDGETS (USD)</p>
         <div style="overflow-x:auto;">
-          <table id="expenseReportTable">
-            <thead><tr><th>Person</th><th>Category</th><th>Note</th><th>Ticket</th><th>Amount</th></tr></thead>
-            <tbody id="expenseReportBody"></tbody>
+          <table id="budgetReportTable">
+            <thead><tr><th>Budget</th><th>Limit</th><th>Reimbursable</th><th>Company card</th><th>Used</th><th>Left</th></tr></thead>
+            <tbody id="budgetReportBody"></tbody>
           </table>
         </div>
+        <p class="report-note" id="budgetReportNote"></p>
+
+        <p class="report-sub">SPENDING BY CATEGORY (PURCHASES IN THE MONTH)</p>
+        <div style="overflow-x:auto;">
+          <table id="categoryReportTable">
+            <thead><tr><th>Category</th><th>Reimbursable (ARS)</th><th>Reimbursable (USD)</th><th>Company card (USD)</th><th>Total (USD)</th></tr></thead>
+            <tbody id="categoryReportBody"></tbody>
+          </table>
+        </div>
+        <p class="report-note" id="categoryReportNote"></p>
+
+        <p class="report-sub">REIMBURSED THIS MONTH (MONEY RETURNED IN THE MONTH)</p>
+        <div style="overflow-x:auto;">
+          <table id="reimbReportTable">
+            <thead><tr><th>Purchase</th><th>Returned</th><th>Category</th><th>Note</th><th>Ticket</th><th>Pesos</th><th>USD</th></tr></thead>
+            <tbody id="reimbReportBody"></tbody>
+          </table>
+        </div>
+
+        <p class="report-sub">NOT YET REIMBURSED</p>
+        <div style="overflow-x:auto;">
+          <table id="pendingReportTable">
+            <thead><tr><th>Purchase</th><th>Category</th><th>Note</th><th>Ticket</th><th>Pesos</th><th>USD</th></tr></thead>
+            <tbody id="pendingReportBody"></tbody>
+          </table>
+        </div>
+
+        <p class="report-sub">COMPANY CARD (NOT REIMBURSABLE)</p>
+        <div style="overflow-x:auto;">
+          <table id="cardReportTable">
+            <thead><tr><th>Purchase</th><th>Category</th><th>Note</th><th>Ticket</th><th>USD</th></tr></thead>
+            <tbody id="cardReportBody"></tbody>
+          </table>
+        </div>
+        <p class="report-note" id="grandTotalLine" style="font-weight:700;"></p>
       </div>
     </div>
       <div class="subpanel" id="sub-accounts">
@@ -455,7 +522,24 @@
         <button class="btn ghost small" id="backupNowBtn">Back up now</button>
         <button class="btn ghost small" id="scheduleBackupBtn">Schedule weekly backup</button>
       </div>
-<p class="section-label">ADD A PERSON</p>
+<p class="section-label">EXPENSE BUDGETS (USD PER PERSON, PER MONTH)</p>
+      <p class="rule-note">Team budgets: people covered × the amount per person. The office budget counts only the "Office Budget" category. Monthly meal has its own budget.</p>
+      <div class="field-grid">
+        <div class="field-row"><label for="stOffice">Office budget per person</label><input type="number" id="stOffice" min="0" step="0.01"></div>
+        <div class="field-row"><label for="stMeal">Monthly meal per person</label><input type="number" id="stMeal" min="0" step="0.01"></div>
+      </div>
+      <button class="btn ghost small" id="stSaveBtn">Save amounts</button>
+      <p class="section-label" style="margin-top:16px;">PEOPLE COVERED</p>
+      <div id="stHeadcountList"></div>
+      <div class="field-grid">
+        <div class="field-row"><label for="stMonth">From month</label><select id="stMonth"></select></div>
+        <div class="field-row"><label for="stYear">Year</label><input type="number" id="stYear" step="1"></div>
+      </div>
+      <div class="field-row"><label for="stPeople">People covered from then on</label><input type="number" id="stPeople" min="0" step="1"></div>
+      <button class="btn ghost small" id="stAddBtn">Set people covered</button>
+      <p class="msg" id="stMsg"></p>
+
+      <p class="section-label">ADD A PERSON</p>
       <div class="field-grid">
         <div class="field-row"><label for="tpName">Name</label><input type="text" id="tpName"></div>
         <div class="field-row"><label for="tpEmail">Email</label><input type="email" id="tpEmail"></div>
@@ -517,7 +601,7 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
@@ -538,7 +622,6 @@ const US_HOLIDAYS = [
   { date: "2026-12-24", name: "Christmas Eve" },
   { date: "2026-12-25", name: "Christmas Day" },
   { date: "2026-12-31", name: "New Year's Eve" },
-  { date: "2027-12-01", name: "New Year's Day" },
 ];
 const KIND_LABEL = { pto: "PTO", home_office: "Home Office" };
 
@@ -546,7 +629,7 @@ const $ = (id) => document.getElementById(id);
 let token = null, me = null, isLeader = false;
 let users = [], usersById = {}, requests = [], myExtras = [], expenses = [], officeText = "";
 let pollTimer = null, pcTeamInit = false;
-let backend = { version: undefined, mail: null }, allExtras = [], manageId = null, formFields = [], formHandler = null, officeLinks = {}, leaderSub = "approvals";
+let backend = { version: undefined, mail: null }, allExtras = [], manageId = null, formFields = [], formHandler = null, officeLinks = {}, leaderSub = "approvals", settings = null;
 
 // ---------- helpers ----------
 function esc(s) {
@@ -591,13 +674,13 @@ async function withBtn(btn, fn) {
   try { return await fn(); } finally { btn.disabled = prev; }
 }
 
-["exMonth", "rbMonth", "repMonth", "pcMonth", "smMonth"].forEach((id) => {
+["exMonth", "stMonth", "repMonth", "pcMonth", "smMonth"].forEach((id) => {
   const sel = $(id);
   sel.innerHTML = MONTHS.map((m) => `<option>${m}</option>`).join("");
   sel.value = MONTHS[new Date().getMonth()];
 });
 
-["exYear", "rbYear", "repYear", "pcYear", "smYear"].forEach((id) => { $(id).value = new Date().getFullYear(); });
+["exYear", "stYear", "repYear", "pcYear", "smYear"].forEach((id) => { $(id).value = new Date().getFullYear(); });
 
 // ---------- balances (PTO and Home Office are counted separately, per calendar year) ----------
 function fmtDays(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
@@ -664,6 +747,8 @@ function showAuth(message) {
   $("pwModal").classList.add("hidden");
   $("formModal").classList.add("hidden");
   manageId = null;
+  expInit = false;
+  resetExpenseForm(false);
   setMsg($("authMsg"), message || "", message ? "error" : "");
 }
 
@@ -727,6 +812,7 @@ async function sync(force) {
   backend = { version: d.version, mail: d.mail || null, backup: d.backup || null };
   allExtras = d.allExtras || [];
   officeLinks = d.officeLinks || {};
+  settings = d.settings || null;
   renderAll(!!force);
 }
 
@@ -740,7 +826,6 @@ function renderAll(force) {
   const activeTab = document.querySelector(".tab.active");
   if (!isLeader && activeTab && ["leader"].indexOf(activeTab.dataset.tab) >= 0) activateTab("pto");
   if (!pcTeamInit) { $("pcTeam").value = me.team || "support"; pcTeamInit = true; calculatePay(); }
-  populateMemberSelect();
   renderPtoStats();
   renderMyRequests();
   renderHeroShiftList();
@@ -748,11 +833,17 @@ function renderAll(force) {
   renderDecided();
   renderTeamList(force);
   renderBackendStatus();
+  renderSettings();
   renderSummary();
   renderMyExtras();
   renderExpenses();
   renderOffice();
   if (me.team === "sales" && $("panel-extras").classList.contains("active")) loadCleaningInfo();
+  if (isLeader && !expInit && backendOk()) {
+    expInit = true;
+    $("rbDate").value = todayIso(); $("rbUpTo").value = todayIso(); $("rbPaidOn").value = todayIso();
+    lookupRate();
+  }
 }
 
 // ---------- change password ----------
@@ -905,15 +996,7 @@ function renderMyExtras() {
 }
 
 // ---------- Team tab (leaders) ----------
-function populateMemberSelect() {
-  const sel = $("rbMember");
-  const current = sel.value;
-  const active = users.filter((u) => u.active === "yes")
-    .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
-  sel.innerHTML = '<option value="">None</option>' +
-    active.map((u) => `<option value="${esc(u.id)}">${esc(u.name || u.email)}</option>`).join("");
-  if (current) sel.value = current;
-}
+
 
 function typeLabelOf(r) {
   return r.kind === "holiday_work"
@@ -1081,12 +1164,147 @@ function renderTeamList(force) {
 }
 
 // ---------- Expenses (leaders) ----------
-function updateExpenseForm() {
-  const card = $("rbType").value === "company_card";
-  $("rbMemberLabel").textContent = card ? "Person who bought it (optional)" : "Person who paid (required)";
+
+
+// ---------- Expenses (leaders): purchase date, pesos or dollars, official rate, budgets, reimbursement ----------
+const OFFICE_CAT = "Office Budget", MEAL_CAT = "Monthly meal";
+const EXP_CATEGORIES = ["Office Budget", "Office Utilities", "Office Cleaning", "Equipment", "Monthly meal", "Other"];
+let expInit = false, rateManual = false, rateSeq = 0, editingExpenseId = null;
+
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
-$("rbType").addEventListener("change", updateExpenseForm);
-updateExpenseForm();
+function fmtArs(n) { return "ARS " + (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtRate(n) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 }); }
+function monthLabel(ym) { const [y, m] = ym.split("-"); return `${MONTHS[Number(m) - 1]} ${y}`; }
+
+// Team budgets (people covered x USD per person), as set in Accounts.
+function peopleFor(year, monthIdx) {
+  const hc = (settings && settings.headcount) || [{ from: "2000-01", people: 7 }];
+  const key = `${year}-${String(monthIdx + 1).padStart(2, "0")}`;
+  let people = hc[0].people;
+  hc.forEach((h) => { if (h.from <= key) people = h.people; });
+  return people;
+}
+function budgetUsed(category, month, year, excludeId) {
+  let reimb = 0, card = 0;
+  expenses.forEach((x) => {
+    if (x.category !== category || x.month !== month || x.year !== year || x.id === excludeId) return;
+    if (x.paymentType === "company_card") card += x.amount; else reimb += x.amount;
+  });
+  return { reimb, card, used: reimb + card };
+}
+function formMonth() {
+  const date = $("rbDate").value || todayIso();
+  return { month: MONTHS[Number(date.slice(5, 7)) - 1], year: Number(date.slice(0, 4)) };
+}
+function currentUsd() {
+  const amt = parseFloat($("rbAmount").value), rate = parseFloat($("rbRate").value);
+  if (!(amt > 0)) return 0;
+  if ($("rbCurrency").value === "ARS") return rate > 0 ? Math.round((amt / rate) * 100) / 100 : 0;
+  return Math.round(amt * 100) / 100;
+}
+function renderBudgetStrip() {
+  const el = $("budgetStrip");
+  if (!isLeader || !settings) { el.innerHTML = ""; return; }
+  const { month, year } = formMonth();
+  const people = peopleFor(year, MONTHS.indexOf(month));
+  const part = (label, cat, pp) => {
+    const u = budgetUsed(cat, month, year, editingExpenseId);
+    const budget = people * pp, left = budget - u.used;
+    return `<div><strong>${esc(label)}</strong> ${fmtMoney(budget)} (${people} × ${fmtMoney(pp)}): used ${fmtMoney(u.used)} (${fmtMoney(u.reimb)} reimbursable + ${fmtMoney(u.card)} company card) · ${left >= 0 ? `<strong>${fmtMoney(left)} left</strong>` : `<strong style="color:var(--red)">over by ${fmtMoney(-left)}</strong>`}</div>`;
+  };
+  el.innerHTML = `<div style="margin-bottom:4px;">${esc(month)} ${year}</div>` + part("Office budget", OFFICE_CAT, settings.officePerPerson) + part("Monthly meal", MEAL_CAT, settings.mealPerPerson);
+}
+function renderBudgetPreview() {
+  const el = $("rbBudgetPreview");
+  const cat = $("rbCategory").value, usd = currentUsd();
+  if (!isLeader || !settings || !usd || (cat !== OFFICE_CAT && cat !== MEAL_CAT)) { el.innerHTML = ""; return; }
+  const { month, year } = formMonth();
+  const people = peopleFor(year, MONTHS.indexOf(month));
+  const pp = cat === OFFICE_CAT ? settings.officePerPerson : settings.mealPerPerson;
+  const label = cat === OFFICE_CAT ? "office budget" : "monthly meal budget";
+  const after = people * pp - budgetUsed(cat, month, year, editingExpenseId).used - usd;
+  el.innerHTML = after >= 0 ? `This expense leaves ${fmtMoney(after)} of the ${label}.` : `<span style="color:var(--red)">This expense puts the ${label} over by ${fmtMoney(-after)}.</span>`;
+}
+function renderConvert() {
+  const amt = parseFloat($("rbAmount").value), rate = parseFloat($("rbRate").value);
+  const el = $("rbConvert");
+  if (!(amt > 0)) { el.textContent = ""; return; }
+  if ($("rbCurrency").value === "ARS") el.textContent = rate > 0 ? `= ${fmtMoney(currentUsd())}` : "Enter the rate to see the dollars.";
+  else el.textContent = rate > 0 ? `= ${fmtArs(Math.round(amt * rate * 100) / 100)}` : "No rate: the peso amount will be missing.";
+}
+function refreshExpenseForm() { renderBudgetStrip(); renderBudgetPreview(); renderConvert(); }
+["rbType", "rbCategory", "rbCurrency"].forEach((id) => $(id).addEventListener("change", refreshExpenseForm));
+$("rbAmount").addEventListener("input", refreshExpenseForm);
+$("rbRate").addEventListener("input", () => {
+  rateManual = true;
+  $("rbRateInfo").style.color = "";
+  $("rbRateInfo").textContent = "Manual rate.";
+  refreshExpenseForm();
+});
+$("rbDate").addEventListener("change", () => { rateManual = false; lookupRate(); refreshExpenseForm(); });
+$("rbFilter").addEventListener("change", () => renderExpenses());
+
+// Official USD rate for the purchase date (weekends and holidays use the last business day).
+async function lookupRate() {
+  if (!isLeader || !backendOk()) return;
+  const date = $("rbDate").value, info = $("rbRateInfo");
+  if (!date) { info.textContent = ""; return; }
+  const seq = ++rateSeq;
+  info.style.color = "";
+  info.textContent = "Looking up the official rate…";
+  try {
+    const d = await api("rate", { date });
+    if (seq !== rateSeq) return;
+    if (!rateManual) $("rbRate").value = d.rate;
+    info.textContent = `Official rate (venta) ${d.date === date ? "for " + date : "from " + d.date + ", the last business day before " + date}: ${fmtRate(d.rate)} (${d.source}).`;
+  } catch (e) {
+    if (seq !== rateSeq) return;
+    info.style.color = "var(--red)";
+    info.textContent = "Couldn't fetch the official rate: type it in.";
+  }
+  refreshExpenseForm();
+}
+
+function resetExpenseForm(afterSave) {
+  const wasEditing = !!editingExpenseId;
+  editingExpenseId = null;
+  $("rbFormTitle").textContent = "LOG AN EXPENSE";
+  $("rbSubmitBtn").textContent = "Log expense";
+  $("rbCancelEditBtn").classList.add("hidden");
+  [...$("rbCategory").options].forEach((o) => { if (/ \(old\)$/.test(o.textContent)) o.remove(); });
+  $("rbAmount").value = ""; $("rbNote").value = ""; $("rbFile").value = "";
+  if (wasEditing) { $("rbDate").value = todayIso(); rateManual = false; lookupRate(); }
+  if (!afterSave) setMsg($("rbMsg"), "", "");
+  refreshExpenseForm();
+}
+$("rbCancelEditBtn").addEventListener("click", () => resetExpenseForm(false));
+
+function startEditExpense(x) {
+  editingExpenseId = x.id;
+  $("rbFormTitle").textContent = "EDIT EXPENSE";
+  $("rbSubmitBtn").textContent = "Save changes";
+  $("rbCancelEditBtn").classList.remove("hidden");
+  $("rbType").value = x.paymentType === "company_card" ? "company_card" : "reimbursable";
+  const sel = $("rbCategory");
+  if (![...sel.options].some((o) => o.value === x.category)) {
+    const o = document.createElement("option"); o.value = x.category; o.textContent = x.category + " (old)"; sel.appendChild(o);
+  }
+  sel.value = x.category;
+  $("rbDate").value = x.purchaseDate || "";
+  $("rbCurrency").value = x.currency || "USD";
+  $("rbAmount").value = (x.currency === "ARS" ? x.amountArs : x.amount) || "";
+  $("rbRate").value = x.rate > 0 ? x.rate : "";
+  rateManual = x.rateSource !== "auto";
+  $("rbNote").value = x.note || ""; $("rbFile").value = "";
+  $("rbRateInfo").style.color = "";
+  $("rbRateInfo").textContent = x.rate > 0 ? `Saved rate: ${fmtRate(x.rate)} (${x.rateSource === "auto" ? "official" : "manual"}).` : "No rate saved: type it if you want the peso amount.";
+  setMsg($("rbMsg"), "", "");
+  refreshExpenseForm();
+  $("rbFormTitle").scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 function readB64(blob) {
   return new Promise((resolve, reject) => {
@@ -1124,52 +1342,97 @@ async function prepareTicket(file) {
 
 $("rbSubmitBtn").addEventListener("click", () => withBtn($("rbSubmitBtn"), async () => {
   const msg = $("rbMsg");
-  const type = $("rbType").value;
-  const memberId = $("rbMember").value;
-  const amount = parseFloat($("rbAmount").value);
-  if (type === "reimbursable" && !memberId) { setMsg(msg, "Choose who this reimbursement is for.", "error"); return; }
+  const amount = parseFloat($("rbAmount").value), date = $("rbDate").value;
+  const currency = $("rbCurrency").value, rate = parseFloat($("rbRate").value);
+  if (!editingExpenseId && !date) { setMsg(msg, "Choose the purchase date.", "error"); return; }
   if (!(amount > 0)) { setMsg(msg, "Enter an amount above 0.", "error"); return; }
+  if (currency === "ARS" && !(rate > 0)) { setMsg(msg, "Enter the exchange rate (pesos per US dollar).", "error"); return; }
   try {
     setMsg(msg, $("rbFile").files[0] ? "Uploading ticket…" : "Saving…", "");
     const ticket = await prepareTicket($("rbFile").files[0]);
-    await api("createExpense", Object.assign({
-      paymentType: type, memberId, month: $("rbMonth").value, year: parseInt($("rbYear").value, 10),
-      category: $("rbCategory").value, amount, note: $("rbNote").value.trim(),
-    }, ticket || {}));
-    setMsg(msg, "Logged.", "ok");
-    $("rbAmount").value = "0"; $("rbNote").value = ""; $("rbFile").value = "";
+    const payload = Object.assign({
+      paymentType: $("rbType").value, purchaseDate: date, category: $("rbCategory").value, currency, amount,
+      rate: rate > 0 ? rate : "", rateSource: rateManual ? "manual" : "auto", note: $("rbNote").value.trim(),
+    }, ticket || {});
+    const wasEditing = !!editingExpenseId;
+    if (wasEditing) await api("updateExpense", Object.assign({ id: editingExpenseId }, payload));
+    else await api("createExpense", payload);
+    resetExpenseForm(true);
+    setMsg(msg, wasEditing ? "Saved." : "Logged.", "ok");
     await sync(true);
   } catch (e) { setMsg(msg, e.message, "error"); }
 }));
 
+async function markOne(id, reopen) {
+  let date = "";
+  if (!reopen) {
+    const d = prompt("Date the money was returned (YYYY-MM-DD):", todayIso());
+    if (d === null) return;
+    date = d.trim();
+  }
+  try { await api("markReimbursed", { ids: [id], date }); await sync(true); } catch (e) { alert(e.message); }
+}
+$("rbMarkAllBtn").addEventListener("click", () => withBtn($("rbMarkAllBtn"), async () => {
+  const msg = $("rbMarkMsg"), upTo = $("rbUpTo").value, paid = $("rbPaidOn").value;
+  if (!upTo || !paid) { setMsg(msg, "Choose both dates.", "error"); return; }
+  const list = expenses.filter((x) => x.paymentType !== "company_card" && x.reimbursedOn === "" && x.purchaseDate && x.purchaseDate <= upTo);
+  if (!list.length) { setMsg(msg, "Nothing is pending up to that date.", "error"); return; }
+  const ars = list.reduce((s, x) => s + (x.amountArs || 0), 0), usd = list.reduce((s, x) => s + x.amount, 0);
+  if (!confirm(`Mark ${list.length} expense(s) bought up to ${upTo} (${fmtArs(ars)} · ${fmtMoney(usd)}) as reimbursed on ${paid}?`)) return;
+  try {
+    const d = await api("markReimbursed", { upTo, date: paid });
+    setMsg(msg, `Marked ${d.count} as reimbursed.`, "ok");
+    await sync(true);
+  } catch (e) { setMsg(msg, e.message, "error"); }
+}));
+$("rbTableBody").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-act]");
+  if (!b) return;
+  const id = b.dataset.id, x = expenses.find((y) => y.id === id);
+  if (!x) return;
+  const act = b.dataset.act;
+  if (act === "ticket") openTicket(id);
+  else if (act === "edit") startEditExpense(x);
+  else if (act === "mark") markOne(id, false);
+  else if (act === "reopen") markOne(id, true);
+  else if (act === "del") {
+    if (!confirm("Delete this expense permanently? This can't be undone, and its ticket will be removed too.")) return;
+    withBtn(b, async () => { try { await api("deleteExpense", { id }); await sync(true); } catch (err) { alert(err.message); } });
+  }
+});
+
 function renderExpenses() {
   const body = $("rbTableBody");
-  if (!isLeader) { body.innerHTML = ""; return; }
-  if (!expenses.length) { body.innerHTML = '<tr><td colspan="6" class="empty">No expenses logged yet.</td></tr>'; return; }
-  let reimb = 0, card = 0;
-  const rows = expenses.map((x) => {
-    const isCard = x.paymentType === "company_card";
-    if (isCard) card += x.amount; else reimb += x.amount;
+  renderBudgetStrip();
+  renderBudgetPreview();
+  if (!isLeader) { body.innerHTML = ""; $("rbPendingTotal").textContent = ""; return; }
+  const sum = (list, k) => list.reduce((s, x) => s + (x[k] || 0), 0);
+  const pending = expenses.filter((x) => x.paymentType !== "company_card" && x.reimbursedOn === "");
+  const missing = pending.filter((x) => !(x.amountArs > 0)).length;
+  $("rbPendingTotal").textContent = pending.length
+    ? `Pending reimbursement: ${pending.length} expense(s) · ${fmtArs(sum(pending, "amountArs"))} · ${fmtMoney(sum(pending, "amount"))}${missing ? ` · ${missing} without a peso amount (rate missing)` : ""}`
+    : "Nothing is pending reimbursement.";
+  let list = $("rbFilter").value === "pending" ? pending : expenses;
+  list = list.slice().sort((a, b) => String(b.purchaseDate || "").localeCompare(String(a.purchaseDate || "")) || String(b.createdAt).localeCompare(String(a.createdAt)));
+  if (!list.length) { body.innerHTML = '<tr><td colspan="5" class="empty">No expenses to show.</td></tr>'; return; }
+  body.innerHTML = list.map((x) => {
+    const card = x.paymentType === "company_card";
+    const date = x.purchaseDate ? esc(fmtDate(x.purchaseDate)) : `${esc(x.month)} ${esc(x.year)}<div class="sub">no date</div>`;
+    const status = card ? '<span class="chip card">Company card</span>'
+      : x.reimbursedOn === "" ? '<span class="chip warn">Pending</span>'
+      : x.reimbursedOn === "legacy" ? "Reimbursed (earlier)" : `Reimbursed ${esc(fmtDate(x.reimbursedOn))}`;
+    const money = x.currency === "ARS"
+      ? `${fmtArs(x.amountArs)}<div class="sub">${fmtMoney(x.amount)}</div>`
+      : `${fmtMoney(x.amount)}${x.amountArs > 0 ? `<div class="sub">${fmtArs(x.amountArs)}</div>` : (card ? "" : '<div class="sub" style="color:var(--red)">rate missing</div>')}`;
+    const act = (name, label, cls) => `<button class="link-btn${cls ? " " + cls : ""}" data-act="${name}" data-id="${esc(x.id)}">${label}</button>`;
     return `<tr>
-      <td>${esc(x.memberId ? nameOf(x.memberId) : "None")}</td>
-      <td>${esc(x.month)} ${esc(x.year)}</td>
-      <td>${isCard ? '<span class="chip card">Company card</span>' : "Reimbursable"}</td>
+      <td>${date}</td>
       <td>${esc(x.category)}${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}</td>
-      <td class="amount">${fmtMoney(x.amount)}</td>
-      <td style="white-space:nowrap;">${x.ticketFileId ? `<button class="link-btn" data-ticket="${esc(x.id)}">Ticket</button> ` : ""}<button class="link-btn danger" data-del="${esc(x.id)}">Delete</button></td>
+      <td>${status}</td>
+      <td class="amount">${money}</td>
+      <td><div class="row-actions">${x.ticketFileId ? act("ticket", "Ticket") : ""}${act("edit", "Edit")}${!card ? (x.reimbursedOn === "" ? act("mark", "Mark reimbursed") : act("reopen", "Reopen")) : ""}${act("del", "Delete", "danger")}</div></td>
     </tr>`;
   }).join("");
-  body.innerHTML = rows +
-    `<tr class="total-row"><td colspan="4">Reimbursable total</td><td class="amount">${fmtMoney(reimb)}</td><td></td></tr>` +
-    `<tr class="total-row"><td colspan="4">Company card total (not reimbursable)</td><td class="amount">${fmtMoney(card)}</td><td></td></tr>`;
-
-  body.querySelectorAll("[data-ticket]").forEach((btn) => btn.addEventListener("click", () => openTicket(btn.dataset.ticket)));
-  body.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
-    if (!confirm("Delete this expense permanently? This can't be undone, and its ticket will be removed too.")) return;
-    withBtn(btn, async () => {
-      try { await api("deleteExpense", { id: btn.dataset.del }); await sync(true); } catch (e) { alert(e.message); }
-    });
-  }));
 }
 
 async function openTicket(id) {
@@ -1201,7 +1464,7 @@ function updateLeaderCount() {
   $("subApprovalsBtn").textContent = "Approvals" + (n ? ` (${n})` : "");
 }
 
-// ---------- Reports (leaders): one monthly report with extras and expenses together ----------
+// ---------- Reports (leaders): one monthly report for accounting ----------
 $("repGenerateBtn").addEventListener("click", () => withBtn($("repGenerateBtn"), async () => {
   const msg = $("repMsg");
   setMsg(msg, "", "");
@@ -1210,7 +1473,12 @@ $("repGenerateBtn").addEventListener("click", () => withBtn($("repGenerateBtn"),
     const d = await api("report", { month, year });
     $("reportMonth").textContent = `${month} ${year}`;
     renderExtrasReport(d.extras, d.cleaning);
-    renderExpenseReport(d.expenses);
+    renderBudgetReport(d.budget);
+    renderCategoryReport(d.expenses);
+    renderMoneyList("reimbReportBody", d.reimbursed, "Total returned this month", true);
+    renderMoneyList("pendingReportBody", d.pending, "Total not yet reimbursed", false);
+    renderCardReport(d.expenses.filter((x) => x.paymentType === "company_card"));
+    renderGrandTotal(d.expenses);
     $("reportBlock").classList.remove("hidden");
   } catch (e) { setMsg(msg, e.message, "error"); }
 }));
@@ -1223,8 +1491,7 @@ function renderExtrasReport(rows, cleaning) {
     v.extraDays += r.extraDays; v.heroShift += r.heroShift; v.hours10 += r.hours10; v.hours15 += r.hours15;
     v.cleaningSold += r.cleaningSold || 0;
   });
-  const note = $("cleaningReportNote");
-  note.textContent = cleaning && cleaning.total > 0
+  $("cleaningReportNote").textContent = cleaning && cleaning.total > 0
     ? `Cleaning subscription (Sales): ${fmtMoney(cleaning.total)} sold · ${cleaning.percent}% pool ${fmtMoney(cleaning.pool)} · ${cleaning.count} Sales people · ${fmtMoney(cleaning.perPerson)} each.`
     : "No cleaning subscription logged for this month.";
   const ids = Object.keys(by).sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
@@ -1239,28 +1506,63 @@ function renderExtrasReport(rows, cleaning) {
   body.innerHTML = html + `<tr class="report-total-row"><td>Total</td><td>${fmtDays(t.extraDays)}</td><td>${fmtDays(t.heroShift)}</td><td>${fmtDays(t.hours10)}h</td><td>${fmtDays(t.hours15)}h</td><td>${money(t.cleaningSold)}</td></tr>`;
 }
 
-// Reimbursable first, grouped by person with a subtotal each; then company card; then one grand total.
-function renderExpenseReport(rows) {
-  const body = $("expenseReportBody");
-  const reimb = rows.filter((x) => x.paymentType !== "company_card");
-  const card = rows.filter((x) => x.paymentType === "company_card");
-  const sum = (list) => list.reduce((s, x) => s + (x.amount || 0), 0);
-  const line = (r) => `<tr><td>${esc(r.memberId ? nameOf(r.memberId) : "None")}</td><td>${esc(r.category)}</td><td>${esc(r.note)}</td><td>${r.ticketFileId ? "Yes" : ""}</td><td class="amount">${fmtMoney(r.amount)}</td></tr>`;
-  let html = '<tr class="report-section-row"><td colspan="5">Reimbursable (to pay to people)</td></tr>';
-  if (!reimb.length) html += '<tr><td colspan="5" class="empty">None logged.</td></tr>';
-  const byPerson = {};
-  reimb.forEach((r) => { (byPerson[r.memberId] = byPerson[r.memberId] || []).push(r); });
-  Object.keys(byPerson).sort((a, b) => nameOf(a).localeCompare(nameOf(b))).forEach((id) => {
-    html += byPerson[id].map(line).join("");
-    html += `<tr class="report-subtotal"><td colspan="4">Subtotal: ${esc(nameOf(id))}</td><td class="amount">${fmtMoney(sum(byPerson[id]))}</td></tr>`;
+function renderBudgetReport(b) {
+  const row = (label, p) => `<tr><td>${label}</td><td class="amount">${fmtMoney(p.budget)}</td><td class="amount">${fmtMoney(p.reimbursable)}</td><td class="amount">${fmtMoney(p.card)}</td><td class="amount">${fmtMoney(p.used)}</td><td class="amount">${p.remaining >= 0 ? fmtMoney(p.remaining) : "Over by " + fmtMoney(-p.remaining)}</td></tr>`;
+  $("budgetReportBody").innerHTML = row("Office budget", b.office) + row("Monthly meal", b.meal);
+  $("budgetReportNote").textContent = `${b.people} people covered. Office budget: ${fmtMoney(b.office.perPerson)} per person, only the "Office Budget" category counts. Monthly meal: ${fmtMoney(b.meal.perPerson)} per person. Used = reimbursable + company card.`;
+}
+
+// Purchases made in the month, by category, split reimbursable / company card.
+function renderCategoryReport(rows) {
+  const body = $("categoryReportBody");
+  const cats = EXP_CATEGORIES.slice();
+  rows.forEach((x) => { if (cats.indexOf(x.category) < 0) cats.push(x.category); });
+  const t = { ra: 0, ru: 0, cu: 0 };
+  let html = "";
+  cats.forEach((c) => {
+    const list = rows.filter((x) => x.category === c);
+    if (!list.length) return;
+    const reimb = list.filter((x) => x.paymentType !== "company_card"), card = list.filter((x) => x.paymentType === "company_card");
+    const ra = reimb.reduce((s, x) => s + (x.amountArs || 0), 0), ru = reimb.reduce((s, x) => s + x.amount, 0), cu = card.reduce((s, x) => s + x.amount, 0);
+    t.ra += ra; t.ru += ru; t.cu += cu;
+    html += `<tr><td>${esc(c)}</td><td class="amount">${fmtArs(ra)}</td><td class="amount">${fmtMoney(ru)}</td><td class="amount">${fmtMoney(cu)}</td><td class="amount">${fmtMoney(ru + cu)}</td></tr>`;
   });
-  html += `<tr class="report-total-row"><td colspan="4">Total reimbursable</td><td class="amount">${fmtMoney(sum(reimb))}</td></tr>`;
-  html += '<tr class="report-section-row"><td colspan="5">Company card (not reimbursable)</td></tr>';
-  if (!card.length) html += '<tr><td colspan="5" class="empty">None logged.</td></tr>';
-  html += card.slice().sort((a, b) => nameOf(a.memberId).localeCompare(nameOf(b.memberId)) || a.category.localeCompare(b.category)).map(line).join("");
-  html += `<tr class="report-total-row"><td colspan="4">Total company card</td><td class="amount">${fmtMoney(sum(card))}</td></tr>`;
-  html += `<tr class="report-total-row"><td colspan="4">Grand total, all expenses</td><td class="amount">${fmtMoney(sum(rows))}</td></tr>`;
-  body.innerHTML = html;
+  body.innerHTML = html
+    ? html + `<tr class="report-total-row"><td>Total</td><td class="amount">${fmtArs(t.ra)}</td><td class="amount">${fmtMoney(t.ru)}</td><td class="amount">${fmtMoney(t.cu)}</td><td class="amount">${fmtMoney(t.ru + t.cu)}</td></tr>`
+    : '<tr><td colspan="5" class="empty">No purchases in this month.</td></tr>';
+  const missing = rows.filter((x) => x.paymentType !== "company_card" && !(x.amountArs > 0)).length;
+  $("categoryReportNote").textContent = missing ? `${missing} reimbursable purchase(s) have no peso amount (rate missing); they count in US dollars only.` : "";
+}
+
+// Reimbursable lists: what was returned in the month, and what is still waiting.
+function renderMoneyList(bodyId, list, totalLabel, showReturned) {
+  const body = $(bodyId), cols = showReturned ? 7 : 6;
+  if (!list.length) { body.innerHTML = `<tr><td colspan="${cols}" class="empty">None.</td></tr>`; return; }
+  const sorted = list.slice().sort((a, b) => String(a.purchaseDate || "").localeCompare(String(b.purchaseDate || "")));
+  let ars = 0, usd = 0, missing = 0;
+  const rows = sorted.map((x) => {
+    ars += x.amountArs || 0; usd += x.amount || 0;
+    if (!(x.amountArs > 0)) missing++;
+    const returned = x.reimbursedOn === "legacy" ? "earlier" : (x.reimbursedOn ? fmtDate(x.reimbursedOn) : "");
+    return `<tr><td>${x.purchaseDate ? esc(fmtDate(x.purchaseDate)) : "no date"}</td>${showReturned ? `<td>${esc(returned)}</td>` : ""}<td>${esc(x.category)}</td><td>${esc(x.note)}</td><td>${x.ticketFileId ? "Yes" : ""}</td><td class="amount">${x.amountArs > 0 ? fmtArs(x.amountArs) : "n/a"}</td><td class="amount">${fmtMoney(x.amount)}</td></tr>`;
+  }).join("");
+  body.innerHTML = rows + `<tr class="report-total-row"><td colspan="${cols - 2}">${esc(totalLabel)}</td><td class="amount">${fmtArs(ars)}</td><td class="amount">${fmtMoney(usd)}</td></tr>`
+    + (missing ? `<tr><td colspan="${cols}" class="empty">${missing} without a peso amount (rate missing): not included in the pesos total.</td></tr>` : "");
+}
+
+function renderCardReport(list) {
+  const body = $("cardReportBody");
+  if (!list.length) { body.innerHTML = '<tr><td colspan="5" class="empty">None.</td></tr>'; return; }
+  const sorted = list.slice().sort((a, b) => String(a.purchaseDate || "").localeCompare(String(b.purchaseDate || "")));
+  const total = sorted.reduce((s, x) => s + x.amount, 0);
+  body.innerHTML = sorted.map((x) => `<tr><td>${x.purchaseDate ? esc(fmtDate(x.purchaseDate)) : "no date"}</td><td>${esc(x.category)}</td><td>${esc(x.note)}</td><td>${x.ticketFileId ? "Yes" : ""}</td><td class="amount">${fmtMoney(x.amount)}</td></tr>`).join("")
+    + `<tr class="report-total-row"><td colspan="4">Total company card</td><td class="amount">${fmtMoney(total)}</td></tr>`;
+}
+
+function renderGrandTotal(rows) {
+  const reimb = rows.filter((x) => x.paymentType !== "company_card").reduce((s, x) => s + x.amount, 0);
+  const card = rows.filter((x) => x.paymentType === "company_card").reduce((s, x) => s + x.amount, 0);
+  $("grandTotalLine").textContent = `Total purchases in the month: ${fmtMoney(reimb + card)} (${fmtMoney(reimb)} reimbursable + ${fmtMoney(card)} company card).`;
 }
 
 function printReport(blockId) {
@@ -1335,8 +1637,37 @@ $("scheduleBackupBtn").addEventListener("click", () => withBtn($("scheduleBackup
   await sync(true).catch(() => {});
 }));
 
+// ---------- Budget settings (leaders) ----------
+function renderSettings() {
+  if (!isLeader || !settings) return;
+  const a = document.activeElement;
+  if (a !== $("stOffice")) $("stOffice").value = settings.officePerPerson;
+  if (a !== $("stMeal")) $("stMeal").value = settings.mealPerPerson;
+  $("stHeadcountList").innerHTML = settings.headcount.map((h) =>
+    `<div class="sub">${h.from === "2000-01" ? "From the start" : "From " + esc(monthLabel(h.from))}: ${esc(h.people)} people${settings.headcount.length > 1 ? ` <button class="link-btn danger" data-hc="${esc(h.from)}">Remove</button>` : ""}</div>`).join("");
+}
+async function saveSettings(payload) {
+  if (!needBackend()) return;
+  try {
+    await api("setSettings", payload);
+    setMsg($("stMsg"), "Saved.", "ok");
+    await sync(true);
+  } catch (e) { setMsg($("stMsg"), e.message, "error"); }
+}
+$("stSaveBtn").addEventListener("click", () => withBtn($("stSaveBtn"), () => saveSettings({ officePerPerson: parseFloat($("stOffice").value), mealPerPerson: parseFloat($("stMeal").value) })));
+$("stAddBtn").addEventListener("click", () => withBtn($("stAddBtn"), () => {
+  const people = parseInt($("stPeople").value, 10);
+  if (!(people >= 0)) { setMsg($("stMsg"), "Enter how many people are covered.", "error"); return; }
+  const from = `${parseInt($("stYear").value, 10)}-${String(MONTHS.indexOf($("stMonth").value) + 1).padStart(2, "0")}`;
+  return saveSettings({ headcount: settings.headcount.filter((h) => h.from !== from).concat({ from, people }) });
+}));
+$("stHeadcountList").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-hc]");
+  if (b) saveSettings({ headcount: settings.headcount.filter((h) => h.from !== b.dataset.hc) });
+});
+
 // ---------- Backend status + email test (leaders) ----------
-function backendOk() { return backend.version !== undefined && backend.version >= 4; }
+function backendOk() { return backend.version !== undefined && backend.version >= 5; }
 function needBackend() {
   if (backendOk()) return true;
   alert("The backend is out of date. Paste the newest Code.gs into Apps Script, run authorize and setup, then Deploy > Manage deployments > New version. The Team tab explains it.");
