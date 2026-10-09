@@ -151,6 +151,103 @@
   #pendingReportTable td:nth-child(n+5), #pendingReportTable th:nth-child(n+5),
   #cardReportTable td:last-child, #cardReportTable th:last-child { text-align: right; }
   #reimbReportTable, #pendingReportTable, #cardReportTable, #categoryReportTable, #budgetReportTable { font-size: 11.5px; }
+  .repkind { font-family: "Space Grotesk", sans-serif; font-size: 12.5px; font-weight: 500; padding: 7px 12px; border-radius: 16px; border: 1px solid var(--rule-strong); background: var(--card); color: var(--brand-dark); cursor: pointer; }
+  .repkind.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .badge.cancelled { background: #E3E5E8; color: #4A4A4A; }
+  .print-only { display: none; }
+  .printing .report-block.print-target.print-only { display: block; }
+  .xb-card { border: 1px solid var(--rule); border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+  .xb-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px; }
+  .xb-title { font-size: 16px; font-weight: 600; }
+  .xb-formula { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: #4A4A4A; }
+  .xb-bar { height: 10px; background: #E3E5E8; border-radius: 5px; margin: 12px 0 6px; overflow: hidden; }
+  .xb-bar > div { height: 10px; background: var(--brand); }
+  .xb-pct { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: #4A4A4A; margin-bottom: 12px; }
+  .xb-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .xb-label { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: 0.06em; color: var(--muted); }
+  .xb-value { font-family: "IBM Plex Mono", monospace; font-size: 16px; font-weight: 600; }
+  .xb-sub { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted); }
+  .xb-break { border-top: 1px solid var(--rule); margin-top: 14px; padding-top: 8px; }
+  .xb-row { display: grid; grid-template-columns: 0.7fr 1.6fr 1fr 0.9fr; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 12.5px; }
+  .xb-row .amount, .py-line .amount, .py-reimb-row .amount { text-align: right; font-family: "IBM Plex Mono", monospace; }
+  .xb-used { font-weight: 700; border-bottom: none; }
+  #expCardTable th:last-child { text-align: right; }
+  .xb-total { display: flex; justify-content: space-between; align-items: baseline; border: 1px solid var(--rule); border-radius: 6px; padding: 14px; margin-bottom: 14px; font-size: 14px; font-weight: 500; }
+  .xb-total strong { font-family: "IBM Plex Mono", monospace; font-size: 20px; }
+  .py-card { border: 1px solid var(--rule); border-left: 4px solid var(--brand); border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: #fff; }
+  .py-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .py-name { font-size: 16px; font-weight: 600; }
+  .py-sub { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .py-total-label { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: 0.06em; color: var(--muted); text-align: right; }
+  .py-total-val { font-family: "IBM Plex Mono", monospace; font-size: 20px; font-weight: 700; text-align: right; }
+  .py-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+  .py-chip { font-size: 11px; border-radius: 10px; padding: 3px 9px; }
+  .py-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; border-top: 1px solid var(--rule); padding-top: 12px; }
+  .py-label { font-size: 11.5px; color: var(--muted); margin-bottom: 4px; min-height: 28px; }
+  .py-field input { text-align: right; font-family: "IBM Plex Mono", monospace; font-size: 13px; padding: 9px 10px; }
+  .py-field input.py-bad { border-color: var(--red); }
+  .py-note { display: flex; justify-content: space-between; gap: 4px; margin-top: 3px; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--muted); }
+  .py-reimb { border-top: 1px solid var(--rule); margin-top: 14px; padding-top: 12px; }
+  .py-reimb-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .py-reimb-total { font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; }
+  .py-reimb-row { display: grid; grid-template-columns: 22px 0.7fr 1.7fr 1fr; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 12.5px; cursor: pointer; }
+  .py-reimb-row input { margin: 0; width: 16px; height: 16px; }
+  .py-lines { border-top: 1px solid var(--rule); margin-top: 12px; padding-top: 4px; }
+  .py-line { display: grid; grid-template-columns: 1.5fr 1fr 0.9fr; gap: 8px; padding: 6px 0; font-size: 13px; }
+  .py-qty { font-size: 12px; color: var(--muted); }
+  .py-total { display: flex; justify-content: space-between; align-items: baseline; background: #F1F3F6; border-radius: 6px; padding: 12px 16px; margin: 4px 0 14px; font-size: 13.5px; font-weight: 600; }
+  .py-total div:last-child { font-family: "IBM Plex Mono", monospace; font-size: 16px; font-weight: 700; }
+  .sch-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .sch-nav-label { font-size: 15px; font-weight: 600; text-align: center; }
+  .sch-today-card { border: 1px solid var(--rule); border-left: 4px solid var(--brand); border-radius: 6px; padding: 14px 16px; margin-bottom: 18px; }
+  .sch-today-title { font-size: 16px; font-weight: 600; margin: 6px 0 8px; }
+  .sch-today-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--rule); }
+  .sch-today-team { width: 58px; flex: none; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--muted); padding-top: 5px; }
+  .sch-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sch-chip { font-size: 12px; border-radius: 12px; padding: 4px 10px; }
+  .sch-team { margin-bottom: 18px; }
+  .sg-wrap { overflow-x: auto; }
+  .sg-row { display: grid; gap: 3px; margin-bottom: 3px; border-radius: 4px; }
+  .sg-you { background: #EEF3FA; }
+  .sg-name { font-size: 12.5px; font-weight: 500; padding: 6px 4px 6px 6px; display: flex; flex-direction: column; justify-content: center; }
+  .sg-note { font-size: 10px; color: var(--muted); font-weight: 400; }
+  .sg-head { text-align: center; padding: 5px 0; border-radius: 4px; font-family: "IBM Plex Mono", monospace; font-size: 10px; line-height: 1.3; }
+  .sg-num { font-size: 13px; font-weight: 600; }
+  .sg-cell { border-radius: 4px; border: 1px solid transparent; text-align: center; padding: 7px 0; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 600; }
+  .sg-sub { font-size: 8.5px; font-weight: 400; min-height: 11px; }
+  .sg-today { border-color: var(--brand); }
+  .sg-x { border: 2px solid #B35C00; padding: 6px 0; }
+  .sg-month .sg-cell { font-size: 8.5px; border-radius: 3px; }
+  .sg-month .sg-head { font-size: 9px; padding: 3px 0; }
+  .sg-month .sg-num { font-size: 11px; }
+  .sg-month .sg-name { font-size: 12px; }
+  [data-sg-uid] { cursor: pointer; }
+  .sch-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 14px; }
+  .sch-leg { font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+  .sch-code { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 600; border-radius: 4px; padding: 3px 7px; display: inline-block; min-width: 30px; text-align: center; }
+  .sch-planner { border-top: 2px solid var(--rule); margin-top: 22px; padding-top: 16px; }
+  .sp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .sp-row { border-top: 1px solid var(--rule); padding: 10px 0; }
+  .sp-name { font-size: 13.5px; font-weight: 500; }
+  .sp-sels { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 6px 0; }
+  .sp-sel { display: flex; flex-direction: column; font-size: 10px; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+  .sp-sel select { padding: 7px 2px; font-size: 11px; font-family: "IBM Plex Mono", monospace; }
+  .sp-from { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .sp-from input { width: 60px; padding: 5px 6px; }
+  .sp-role { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--rule); }
+  .sp-seg { display: flex; gap: 4px; }
+  .sp-seg button { font: inherit; font-size: 12px; padding: 7px 10px; border-radius: 4px; border: 1px solid var(--rule-strong); background: #fff; color: var(--brand-dark); cursor: pointer; }
+  .sp-seg button.on { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
+  .sp-chg { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 9px 0; border-top: 1px solid var(--rule); }
+  .sp-chg-t { font-size: 13px; font-weight: 500; }
+  .sp-shift { display: flex; align-items: center; gap: 10px; }
+  .sch-planner .sub, .sch-today-card .sub { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  .sch-planner .sub { margin-bottom: 4px; }
+  .sp-name .sg-note { margin-left: 8px; }
+  .sp-chg .sub { margin: 2px 0 0; }
+  .sch-print-table { border-collapse: collapse; width: 100%; margin-bottom: 14px; font-size: 11px; }
+  .sch-print-table th, .sch-print-table td { border: 1px solid #999; padding: 4px 5px; text-align: center; }
+  .sch-print-table th:first-child, .sch-print-table td:first-child { text-align: left; }
 </style>
 </head>
 <body>
@@ -190,6 +287,7 @@
     <div class="tabs" id="tabs">
       <button class="tab active" data-tab="pto">PTO</button>
       <button class="tab" data-tab="heroshift">Holidays</button>
+      <button class="tab" data-tab="schedule">Schedule</button>
       <button class="tab" data-tab="extras">Log Extras</button>
       <button class="tab" data-tab="paycalc">Pay Calculator</button>
       <button class="tab" data-tab="office">Office Info</button>
@@ -240,6 +338,37 @@
     </div>
 
     <!-- TAB: Log Extras -->
+    <div class="panel" id="panel-schedule">
+      <p class="msg" id="schMsg"></p>
+      <div id="schToday"></div>
+      <div class="subnav" id="schViewBar" style="margin-bottom:8px;">
+        <button class="repkind active" data-schview="week">Week</button>
+        <button class="repkind" data-schview="month">Month</button>
+      </div>
+      <div class="subnav" id="schTeamBar" style="margin-bottom:10px;">
+        <button class="repkind active" data-schteam="both">Both teams</button>
+        <button class="repkind" data-schteam="support">Support</button>
+        <button class="repkind" data-schteam="sales">Sales</button>
+      </div>
+      <div class="sch-nav">
+        <button class="btn ghost small" id="schPrev" aria-label="Previous">←</button>
+        <div><div class="sch-nav-label" id="schNavLabel"></div><div class="xb-label" id="schNavSub" style="text-align:center;"></div></div>
+        <button class="btn ghost small" id="schNext" aria-label="Next">→</button>
+      </div>
+      <div class="actions" style="margin:12px 0 16px;flex-wrap:wrap;">
+        <button class="btn ghost small" id="schPrintBtn">Print / PDF</button>
+        <button class="btn ghost small" id="schXlsWeekBtn">Excel: week</button>
+        <button class="btn ghost small" id="schXlsMonthBtn">Excel: month</button>
+        <button class="btn small hidden" id="schEditBtn">Edit schedule</button>
+      </div>
+      <div id="schGrid"></div>
+      <p class="xb-label" style="margin:14px 0 8px;">SHIFTS (ARGENTINA TIME)</p>
+      <div class="sch-legend" id="schLegend"></div>
+      <p class="rule-note">Time off, Home Office ("home" under a shift) and Hero Shifts come from approved requests, so nobody types them twice. Only a team's leader edits its schedule; everyone sees both teams. On a US holiday everyone is off except the Hero Shift volunteers.</p>
+      <div id="schPlanner" class="sch-planner hidden"></div>
+      <div id="schPrintView" class="report-block print-only"></div>
+    </div>
+
     <div class="panel" id="panel-extras">
       <p class="admin-note">Log what you worked outside your normal shift this month — it carries into next month's pay.</p>
       <div id="cleaningInfoBox" class="admin-note hidden"><strong>Sales cleaning subscription</strong><br><span id="cleaningInfoText"></span></div>
@@ -358,11 +487,18 @@
 
     <!-- TAB: Summary (leaders only) -->
     <div class="panel" id="panel-leader">
+      <div class="subnav hidden" id="viewBar" style="margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--muted);align-self:center;">View</span>
+        <button class="repkind" data-view="support">Support</button>
+        <button class="repkind" data-view="sales">Sales</button>
+        <button class="repkind" data-view="all">All</button>
+      </div>
       <div class="subnav" id="leaderNav">
         <button class="subtab active" data-sub="approvals" id="subApprovalsBtn">Approvals</button>
         <button class="subtab" data-sub="people">People</button>
         <button class="subtab" data-sub="expenses">Expenses</button>
         <button class="subtab" data-sub="reports">Reports</button>
+        <button class="subtab" data-sub="payroll">Payroll</button>
         <button class="subtab" data-sub="accounts">Accounts</button>
       </div>
       <div class="subpanel active" id="sub-approvals"><p class="section-label">PENDING APPROVALS</p>
@@ -443,7 +579,11 @@
       </div>
     </div>
       <div class="subpanel" id="sub-reports">
-      <p class="admin-note">One monthly report for accounting: extras, budgets, spending by category, what was reimbursed, what is still pending and company card purchases. Ready to print or save as PDF.</p>
+      <p class="admin-note">Two reports for accounting, ready to print or save as PDF. Monthly: extras, budgets, spending by category, what was reimbursed and what is pending. Expenses report: budgets with the expenses behind them, and company card usage.</p>
+      <div class="subnav" id="repKindBar" style="margin-bottom:10px;">
+        <button class="repkind active" data-rep="monthly">Monthly (extras + expenses)</button>
+        <button class="repkind" data-rep="expenses">Expenses report</button>
+      </div>
       <p class="section-label">SELECT MONTH</p>
       <div class="field-grid">
         <div class="field-row">
@@ -512,8 +652,38 @@
         </div>
         <p class="report-note" id="grandTotalLine" style="font-weight:700;"></p>
       </div>
+
+      <div id="expReportBlock" class="report-block hidden">
+        <div class="report-head">
+          <p class="section-label" style="margin:0;">EXPENSES REPORT — <span id="expReportMonth"></span></p>
+          <button class="btn ghost small" id="printExpReportBtn">Print</button>
+        </div>
+        <p class="report-sub">BUDGETS: USED VS BUDGET (USD)</p>
+        <div id="expBudgetCards"></div>
+        <p class="report-note">Budget = people covered × amount per person. Used = company card + reimbursement. The office budget counts only the Office Budget category; Monthly meal has its own.</p>
+        <p class="report-sub">COMPANY CARD USAGE (PURCHASES IN THE MONTH)</p>
+        <div class="xb-total"><span>Used with the company card</span><strong id="expCardTotal"></strong></div>
+        <div style="overflow-x:auto;">
+          <table id="expCardTable">
+            <thead><tr><th>Purchase</th><th>Category</th><th>Note</th><th>Ticket</th><th>USD</th></tr></thead>
+            <tbody id="expCardBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-      <div class="subpanel" id="sub-accounts">
+      <div class="subpanel" id="sub-payroll">
+      <div class="field-grid">
+        <div class="field-row"><label for="pyMonth">Month</label><select id="pyMonth"></select></div>
+        <div class="field-row"><label for="pyYear">Year</label><input type="number" id="pyYear" step="1" value="2026"></div>
+      </div>
+      <p class="msg" id="pyMsg"></p>
+      <div id="pyAllBar" class="actions hidden" style="margin-bottom:10px;"><button class="btn ghost small" id="pyPrintAllBtn">Print both teams</button></div>
+      <div id="pyTeams"><p class="empty">Open this section to load the month.</p></div>
+      <p class="rule-note">Everything is in USD. Hourly rate = monthly base ÷ (hours per week × 52 ÷ 12): 173.33 for 40 h, 130 for 30 h. An extra day and a Hero Shift are 8 h for everyone, as in the handbook; overtime 1.5x = rate × 1.5. The cleaning share is 5% of everything the Sales team sold ÷ the number of Sales people. Reimbursements are converted at the official rate on the purchase date and paid back in pesos. Each team is confirmed and printed separately. Salaries are kept in a private tab of your Sheet.</p>
+      <div id="pyPrintAll" class="report-block print-only"></div>
+    </div>
+
+    <div class="subpanel" id="sub-accounts">
       <div id="backendStatus" class="admin-note"></div>
       <button class="btn ghost small" id="testMailBtn" style="margin-bottom:14px;">Send test email</button>
       
@@ -601,10 +771,11 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
+const VIEW_KEY = "uf_hr_view_v1";
 const POLL_MS = 90000;
 const MAX_TICKET_BYTES = 5 * 1024 * 1024;
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -622,11 +793,29 @@ const US_HOLIDAYS = [
   { date: "2026-12-24", name: "Christmas Eve" },
   { date: "2026-12-25", name: "Christmas Day" },
   { date: "2026-12-31", name: "New Year's Eve" },
+  { date: "2027-01-01", name: "New Year's Day" },
+  { date: "2027-01-18", name: "MLK Day" },
+  { date: "2027-02-15", name: "Presidents Day" },
+  { date: "2027-05-31", name: "Memorial Day" },
+  { date: "2027-06-19", name: "Juneteenth" },
+  { date: "2027-07-04", name: "Independence Day" },
+  { date: "2027-09-06", name: "Labor Day" },
+  { date: "2027-10-11", name: "Columbus Day" },
+  { date: "2027-11-11", name: "Veterans Day" },
+  { date: "2027-11-25", name: "Thanksgiving" },
+  { date: "2027-12-24", name: "Christmas Eve" },
+  { date: "2027-12-25", name: "Christmas Day" },
+  { date: "2027-12-31", name: "New Year's Eve" },
 ];
 const KIND_LABEL = { pto: "PTO", home_office: "Home Office" };
 
 const $ = (id) => document.getElementById(id);
-let token = null, me = null, isLeader = false;
+let token = null, me = null, isLeader = false, isAdmin = false;
+// Admin: which team's data to work with (Support, Sales or All). A team leader is fixed to their own team.
+let viewTeam = (() => { try { const v = localStorage.getItem(VIEW_KEY); return v === "sales" || v === "all" ? v : "support"; } catch (e) { return "support"; } })();
+const inView = (team) => viewTeam === "all" || team === viewTeam;
+const selfApproved = (r) => r.status === "approved" && r.reviewedBy && r.reviewedBy === r.requesterId;
+const ROLE_LABEL = { leader: "Admin", teamlead: "Team leader", member: "Member" };
 let users = [], usersById = {}, requests = [], myExtras = [], expenses = [], officeText = "";
 let pollTimer = null, pcTeamInit = false;
 let backend = { version: undefined, mail: null }, allExtras = [], manageId = null, formFields = [], formHandler = null, officeLinks = {}, leaderSub = "approvals", settings = null;
@@ -657,7 +846,7 @@ function bdInYear(start, end, year) {
   return count;
 }
 function badgeHtml(status) {
-  const label = status === "approved" ? "Approved" : status === "denied" ? "Denied" : "Pending";
+  const label = { approved: "Approved", denied: "Denied", pending: "Pending", cancelled: "Cancelled" }[status] || "Pending";
   return `<span class="badge ${esc(status)}">${label}</span>`;
 }
 function nameOf(uid) {
@@ -674,13 +863,13 @@ async function withBtn(btn, fn) {
   try { return await fn(); } finally { btn.disabled = prev; }
 }
 
-["exMonth", "stMonth", "repMonth", "pcMonth", "smMonth"].forEach((id) => {
+["exMonth", "stMonth", "repMonth", "pcMonth", "smMonth", "pyMonth"].forEach((id) => {
   const sel = $(id);
   sel.innerHTML = MONTHS.map((m) => `<option>${m}</option>`).join("");
   sel.value = MONTHS[new Date().getMonth()];
 });
 
-["exYear", "stYear", "repYear", "pcYear", "smYear"].forEach((id) => { $(id).value = new Date().getFullYear(); });
+["exYear", "stYear", "repYear", "pcYear", "smYear", "pyYear"].forEach((id) => { $(id).value = new Date().getFullYear(); });
 
 // ---------- balances (PTO and Home Office are counted separately, per calendar year) ----------
 function fmtDays(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
@@ -690,6 +879,7 @@ function chargedDays(r) { return r.daysCharged >= 0 ? r.daysCharged : autoDays(r
 function daysLabel(r) {
   if (r.status === "approved") { const d = chargedDays(r); return `${fmtDays(d)} day${d === 1 ? "" : "s"} deducted`; }
   if (r.status === "denied") return "not approved";
+  if (r.status === "cancelled") return "cancelled, no days deducted";
   const a = autoDays(r);
   return `about ${a} weekday${a === 1 ? "" : "s"}; your team leader confirms the days`;
 }
@@ -726,8 +916,19 @@ async function api(action, payload) {
 function activateTab(name) {
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
   document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === "panel-" + name));
+  if (name === "schedule") loadScheduleView(true);
   if (name === "extras" && me && me.team === "sales") loadCleaningInfo();
 }
+$("viewBar").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-view]");
+  if (!b || !isAdmin) return;
+  viewTeam = b.dataset.view;
+  try { localStorage.setItem(VIEW_KEY, viewTeam); } catch (err) {}
+  manageId = null;
+  try { await sync(true); } catch (err) { alert(err.message); }
+  if (leaderSub === "payroll") loadPayroll();
+});
+setInterval(() => { if (me && $("panel-schedule").classList.contains("active")) renderToday(); }, 60000);
 $("tabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".tab");
   if (btn) activateTab(btn.dataset.tab);
@@ -735,7 +936,7 @@ $("tabs").addEventListener("click", (e) => {
 
 // ---------- sign in / out ----------
 function showAuth(message) {
-  token = null; me = null; isLeader = false;
+  token = null; me = null; isLeader = false; isAdmin = false;
   try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
   stopPolling();
   clearPayCalc(); // never leave one person's numbers on screen for the next person
@@ -749,6 +950,10 @@ function showAuth(message) {
   manageId = null;
   expInit = false;
   resetExpenseForm(false);
+  Object.keys(payrolls).forEach((k) => delete payrolls[k]);
+  $("pyTeams").innerHTML = "";
+  Object.keys(schData).forEach((k) => delete schData[k]);
+  schEditing = false; schWeekStart = null; schMonth = null;
   setMsg($("authMsg"), message || "", message ? "error" : "");
 }
 
@@ -799,9 +1004,11 @@ document.addEventListener("visibilitychange", () => {
 
 // ---------- sync ----------
 async function sync(force) {
-  const d = await api("sync");
+  const d = await api("sync", { view: viewTeam });
   me = d.me;
-  isLeader = me.role === "leader";
+  isAdmin = me.role === "leader";
+  isLeader = isAdmin || me.role === "teamlead";
+  if (me.role === "teamlead") viewTeam = me.team;
   users = d.users;
   usersById = {};
   users.forEach((u) => { usersById[u.id] = u; });
@@ -817,12 +1024,16 @@ async function sync(force) {
 }
 
 function renderAll(force) {
-  $("whoamiText").textContent = (me.name || me.email) + (isLeader ? " · Team Leader" : "");
+  $("whoamiText").textContent = (me.name || me.email) + (isAdmin ? " · Team Leader" : me.role === "teamlead" ? ` · ${TEAM_NAME[me.team]} Team Leader` : "");
   $("leaderTabBtn").style.display = isLeader ? "" : "none";
+  ["expenses", "reports", "accounts"].forEach((n) => { const b = document.querySelector(`#leaderNav [data-sub="${n}"]`); if (b) b.classList.toggle("hidden", !isAdmin); });
+  $("viewBar").classList.toggle("hidden", !isAdmin);
+  document.querySelectorAll("#viewBar [data-view]").forEach((b) => b.classList.toggle("active", b.dataset.view === viewTeam));
+  if (!isAdmin && ["expenses", "reports", "accounts"].indexOf(leaderSub) >= 0) activateSub("approvals");
   updateLeaderCount();
   $("exCleanRow").classList.toggle("hidden", me.team !== "sales");
   $("cleaningInfoBox").classList.toggle("hidden", me.team !== "sales");
-  $("officeEditBtn").classList.toggle("hidden", !isLeader);
+  $("officeEditBtn").classList.toggle("hidden", !isAdmin);
   const activeTab = document.querySelector(".tab.active");
   if (!isLeader && activeTab && ["leader"].indexOf(activeTab.dataset.tab) >= 0) activateTab("pto");
   if (!pcTeamInit) { $("pcTeam").value = me.team || "support"; pcTeamInit = true; calculatePay(); }
@@ -839,7 +1050,9 @@ function renderAll(force) {
   renderExpenses();
   renderOffice();
   if (me.team === "sales" && $("panel-extras").classList.contains("active")) loadCleaningInfo();
-  if (isLeader && !expInit && backendOk()) {
+  if (force && $("panel-schedule").classList.contains("active")) loadScheduleView(true);
+  if (force && isLeader && leaderSub === "payroll" && $("panel-leader").classList.contains("active")) loadPayroll();
+  if (isAdmin && !expInit && backendOk()) {
     expInit = true;
     $("rbDate").value = todayIso(); $("rbUpTo").value = todayIso(); $("rbPaidOn").value = todayIso();
     lookupRate();
@@ -909,13 +1122,16 @@ function renderMyRequests() {
   const el = $("myRequestsList");
   const mine = requests.filter((r) => r.requesterId === me.id && r.kind !== "holiday_work");
   if (!mine.length) { el.innerHTML = '<p class="empty">No requests yet.</p>'; return; }
-  el.innerHTML = mine.map((r) => `
+  el.innerHTML = mine.map((r) => {
+    const acts = myRequestActions(r);
+    return `
     <div class="card-row">
       <div class="top-line"><span class="title">${esc(KIND_LABEL[r.kind])}</span>${badgeHtml(r.status)}</div>
       <div class="sub">${esc(datesText(r))} · ${esc(daysLabel(r))}</div>
       ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
-      ${r.status === "pending" ? `<div class="actions"><button class="link-btn danger" data-cancel="${esc(r.id)}">Cancel request</button></div>` : ""}
-    </div>`).join("");
+      ${acts ? `<div class="actions" style="flex-wrap:wrap;">${acts}</div>` : ""}
+    </div>`;
+  }).join("");
 }
 
 // ---------- Hero Shift: one volunteer per team (Sales / Support) per holiday ----------
@@ -929,7 +1145,7 @@ function renderHeroShiftList() {
   const slotHtml = (h, team, past) => {
     const label = team === "sales" ? "Sales" : "Support";
     const forSlot = holidayReqs.filter((r) => r.holidayDate === h.date && slotTeam(r) === team);
-    const active = forSlot.filter((r) => r.status !== "denied"); // denied volunteers disappear
+    const active = forSlot.filter((r) => r.status !== "denied" && r.status !== "cancelled"); // denied and cancelled volunteers disappear
     const mine = active.find((r) => r.requesterId === me.id);
     const declined = forSlot.some((r) => r.requesterId === me.id && r.status === "denied");
     let body;
@@ -937,6 +1153,7 @@ function renderHeroShiftList() {
       body = active.map((r) => `<span class="badge ${esc(r.status)}" style="margin-right:4px;">${esc(nameOf(r.requesterId))}</span>`).join("");
       if (mine) body += '<span class="msg" style="margin:0 0 0 4px;">you volunteered</span>';
       if (mine && mine.status === "pending") body += ` <button class="link-btn danger" data-cancel="${esc(mine.id)}">Cancel</button>`;
+      else if (mine && mine.status === "approved" && !past) body += mine.changeStatus === "cancel" ? ` <span class="msg" style="margin:0 0 0 4px;">cancellation requested, waiting</span> <button class="link-btn" data-withdraw="${esc(mine.id)}">Withdraw</button>` : ` <button class="link-btn danger" data-reqcancel="${esc(mine.id)}">Request cancellation</button>`;
     } else if (!past && me.team === team) {
       body = `<button class="btn small" data-date="${esc(h.date)}" data-name="${esc(h.name)}">Volunteer</button>`;
     } else {
@@ -1004,13 +1221,43 @@ function typeLabelOf(r) {
     : esc(KIND_LABEL[r.kind]);
 }
 
+function changeCardHtml(r) {
+  const isCancel = r.changeStatus === "cancel", hero = r.kind === "holiday_work";
+  const now = hero ? esc(fmtDate(r.holidayDate)) : `${esc(datesText(r))} · ${esc(daysLabel(r))}`;
+  let extra = "";
+  if (!isCancel) {
+    const u = usersById[r.requesterId];
+    const asked = { startDate: r.changeStart, endDate: r.changeEnd };
+    const auto = autoDays(asked);
+    const left = u ? balance(u, r.kind, reqYear(r)).left + chargedDays(r) : 0;
+    extra = `<div class="sub">Requested: ${esc(datesText(asked))}</div>
+      <div class="actions" style="align-items:center;flex-wrap:wrap;">
+        <label style="margin:0;font-size:11px;color:var(--muted);">Days to deduct</label>
+        <input type="number" min="0" step="0.5" value="${auto}" data-days="${esc(r.id)}" data-left="${left}" style="width:70px;display:inline-block;">
+        <span data-over="${esc(r.id)}"></span>
+      </div>
+      <div class="sub">${auto} weekday${auto === 1 ? "" : "s"} in the new dates. Adjust for holidays or half days.</div>`;
+  }
+  return `<div class="card-row" style="border-left:3px solid var(--brand);">
+    <div class="top-line"><span class="title">${esc(nameOf(r.requesterId))}: ${isCancel ? "Cancellation request" : "Change request"}: ${typeLabelOf(r)}</span><span class="badge pending">Waiting</span></div>
+    <div class="sub">Now: ${now}</div>
+    ${extra}
+    <div class="note">Reason: ${esc(r.changeReason)}</div>
+    <div class="actions">
+      <button class="btn small" data-chg-approve="${esc(r.id)}">Approve</button>
+      <button class="btn small deny" data-chg-deny="${esc(r.id)}">Deny</button>
+    </div>
+  </div>`;
+}
+
 function renderPending(force) {
   const el = $("pendingList");
   if (!isLeader) { el.innerHTML = ""; return; }
   if (!force && el.contains(document.activeElement) && document.activeElement !== el) return; // don't wipe a number being typed
+  const changes = requests.filter((r) => r.changeStatus);
   const pending = requests.filter((r) => r.status === "pending");
-  if (!pending.length) { el.innerHTML = '<p class="empty">Nothing pending.</p>'; return; }
-  el.innerHTML = pending.map((r) => {
+  if (!pending.length && !changes.length) { el.innerHTML = '<p class="empty">Nothing pending.</p>'; return; }
+  el.innerHTML = changes.map(changeCardHtml).join("") + pending.map((r) => {
     const isHero = r.kind === "holiday_work";
     let extra = "";
     const u = usersById[r.requesterId];
@@ -1050,6 +1297,17 @@ function renderPending(force) {
       await sync(true);
     } catch (e) { alert(e.message); }
   });
+  const decideChange = (btn, id, decision) => {
+    const input = el.querySelector(`[data-days="${id}"]`);
+    let days;
+    if (decision === "approved" && input) {
+      days = parseFloat(input.value);
+      if (!(days >= 0)) { alert("Enter how many days to deduct."); return; }
+    }
+    withBtn(btn, async () => {
+      try { await api("decideChange", days === undefined ? { id, decision } : { id, decision, days }); await sync(true); } catch (e) { alert(e.message); }
+    });
+  };
   el.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => {
     const input = el.querySelector(`[data-days="${b.dataset.approve}"]`);
     let days;
@@ -1060,6 +1318,8 @@ function renderPending(force) {
     decide(b, b.dataset.approve, "approved", days);
   }));
   el.querySelectorAll("[data-deny]").forEach((b) => b.addEventListener("click", () => decide(b, b.dataset.deny, "denied")));
+  el.querySelectorAll("[data-chg-approve]").forEach((b) => b.addEventListener("click", () => decideChange(b, b.dataset.chgApprove, "approved")));
+  el.querySelectorAll("[data-chg-deny]").forEach((b) => b.addEventListener("click", () => decideChange(b, b.dataset.chgDeny, "denied")));
 }
 
 function renderDecided() {
@@ -1073,7 +1333,7 @@ function renderDecided() {
     const d = chargedDays(r);
     return `<div class="card-row">
       <div class="top-line"><span class="title">${esc(nameOf(r.requesterId))}: ${typeLabelOf(r)}</span>${badgeHtml(r.status)}</div>
-      <div class="sub">${esc(datesText(r))}</div>
+      <div class="sub">${esc(datesText(r))}${selfApproved(r) ? " · approved by themselves" : ""}</div>
       ${counted ? `<div class="sub">${fmtDays(d)} day${d === 1 ? "" : "s"} deducted <button class="link-btn" data-change="${esc(r.id)}">Change days</button></div>` : ""}
     </div>`;
   }).join("");
@@ -1106,10 +1366,10 @@ $("tpAddBtn").addEventListener("click", () => withBtn($("tpAddBtn"), async () =>
 }));
 
 function renderTeamList(force) {
-  if (!isLeader) return;
+  if (!isAdmin) return;
   const el = $("teamList");
   if (!force && el.contains(document.activeElement) && document.activeElement !== el) return;
-  const list = users.slice().sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
+  const list = users.filter((u) => inView(u.team)).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
   el.innerHTML = list.map((u) => {
     const inactive = u.active !== "yes";
     return `<div class="card-row" style="${inactive ? "opacity:.6;" : ""}">
@@ -1117,7 +1377,7 @@ function renderTeamList(force) {
         <span class="title">${esc(u.name || u.email)}</span>
         <span>
           ${inactive ? '<span class="badge denied">Inactive</span> ' : ""}
-          <span class="badge ${u.role === "leader" ? "approved" : "pending"}">${u.role === "leader" ? "Leader" : "Member"}</span>
+          <span class="badge ${u.role === "member" ? "pending" : "approved"}">${ROLE_LABEL[u.role] || "Member"}</span>
         </span>
       </div>
       <div class="sub">${esc(u.email)} · PTO ${u.ptoAllotment}d · Home Office ${u.homeOfficeAllotment}d · ${u.team === "sales" ? "Sales" : "Support"}</div>
@@ -1131,10 +1391,15 @@ function renderTeamList(force) {
           <option value="support" ${u.team === "support" ? "selected" : ""}>Support</option>
           <option value="sales" ${u.team === "sales" ? "selected" : ""}>Sales</option>
         </select>
+        <label style="font-size:11px;color:var(--muted);">Role</label>
+        <select data-rolesel="${esc(u.id)}" style="width:auto;display:inline-block;padding:6px;"${u.id === me.id ? " disabled" : ""}>
+          <option value="member" ${u.role === "member" ? "selected" : ""}>Member</option>
+          <option value="teamlead" ${u.role === "teamlead" ? "selected" : ""}>Team leader (own team)</option>
+          <option value="leader" ${u.role === "leader" ? "selected" : ""}>Admin</option>
+        </select>
         <button class="btn small ghost" data-save="${esc(u.id)}">Save</button>
         <button class="btn small ghost" data-reset="${esc(u.id)}">Reset password</button>
-        ${u.id !== me.id ? `<button class="btn small ghost" data-role="${esc(u.id)}" data-current="${esc(u.role)}">${u.role === "leader" ? "Make Member" : "Make Leader"}</button>
-        <button class="btn small ghost" data-active="${esc(u.id)}" data-current="${esc(u.active)}">${inactive ? "Reactivate" : "Deactivate"}</button>
+        ${u.id !== me.id ? `<button class="btn small ghost" data-active="${esc(u.id)}" data-current="${esc(u.active)}">${inactive ? "Reactivate" : "Deactivate"}</button>
         <button class="btn small ghost" data-delete="${esc(u.id)}" style="color:var(--red);">Delete</button>` : ""}
       </div>
     </div>`;
@@ -1150,10 +1415,9 @@ function renderTeamList(force) {
       ptoAllotment: parseFloat(el.querySelector(`[data-allot="${id}"]`).value) || 0,
       homeOfficeAllotment: parseFloat(el.querySelector(`[data-ho="${id}"]`).value) || 0,
       team: el.querySelector(`[data-team="${id}"]`).value,
+      role: el.querySelector(`[data-rolesel="${id}"]`).value,
     });
   }));
-  el.querySelectorAll("[data-role]").forEach((btn) => btn.addEventListener("click", () =>
-    run(btn, "updateUser", { userId: btn.dataset.role, role: btn.dataset.current === "leader" ? "member" : "leader" })));
   el.querySelectorAll("[data-active]").forEach((btn) => btn.addEventListener("click", () =>
     run(btn, "updateUser", { userId: btn.dataset.active, active: btn.dataset.current === "yes" ? "no" : "yes" })));
   el.querySelectorAll("[data-reset]").forEach((btn) => btn.addEventListener("click", () => {
@@ -1207,7 +1471,7 @@ function currentUsd() {
 }
 function renderBudgetStrip() {
   const el = $("budgetStrip");
-  if (!isLeader || !settings) { el.innerHTML = ""; return; }
+  if (!isAdmin || !settings) { el.innerHTML = ""; return; }
   const { month, year } = formMonth();
   const people = peopleFor(year, MONTHS.indexOf(month));
   const part = (label, cat, pp) => {
@@ -1220,7 +1484,7 @@ function renderBudgetStrip() {
 function renderBudgetPreview() {
   const el = $("rbBudgetPreview");
   const cat = $("rbCategory").value, usd = currentUsd();
-  if (!isLeader || !settings || !usd || (cat !== OFFICE_CAT && cat !== MEAL_CAT)) { el.innerHTML = ""; return; }
+  if (!isAdmin || !settings || !usd || (cat !== OFFICE_CAT && cat !== MEAL_CAT)) { el.innerHTML = ""; return; }
   const { month, year } = formMonth();
   const people = peopleFor(year, MONTHS.indexOf(month));
   const pp = cat === OFFICE_CAT ? settings.officePerPerson : settings.mealPerPerson;
@@ -1249,7 +1513,7 @@ $("rbFilter").addEventListener("change", () => renderExpenses());
 
 // Official USD rate for the purchase date (weekends and holidays use the last business day).
 async function lookupRate() {
-  if (!isLeader || !backendOk()) return;
+  if (!isAdmin || !backendOk()) return;
   const date = $("rbDate").value, info = $("rbRateInfo");
   if (!date) { info.textContent = ""; return; }
   const seq = ++rateSeq;
@@ -1405,7 +1669,7 @@ function renderExpenses() {
   const body = $("rbTableBody");
   renderBudgetStrip();
   renderBudgetPreview();
-  if (!isLeader) { body.innerHTML = ""; $("rbPendingTotal").textContent = ""; return; }
+  if (!isAdmin) { body.innerHTML = ""; $("rbPendingTotal").textContent = ""; return; }
   const sum = (list, k) => list.reduce((s, x) => s + (x[k] || 0), 0);
   const pending = expenses.filter((x) => x.paymentType !== "company_card" && x.reimbursedOn === "");
   const missing = pending.filter((x) => !(x.amountArs > 0)).length;
@@ -1453,13 +1717,14 @@ function activateSub(name) {
   leaderSub = name;
   document.querySelectorAll(".subtab").forEach((t) => t.classList.toggle("active", t.dataset.sub === name));
   document.querySelectorAll(".subpanel").forEach((p) => p.classList.toggle("active", p.id === "sub-" + name));
+  if (name === "payroll") loadPayroll();
 }
 $("leaderNav").addEventListener("click", (e) => {
   const b = e.target.closest(".subtab");
   if (b) activateSub(b.dataset.sub);
 });
 function updateLeaderCount() {
-  const n = requests.filter((r) => r.status === "pending").length;
+  const n = requests.filter((r) => r.status === "pending" || r.changeStatus).length;
   $("leaderTabBtn").textContent = "Team Leader" + (n ? ` (${n})` : "");
   $("subApprovalsBtn").textContent = "Approvals" + (n ? ` (${n})` : "");
 }
@@ -1470,6 +1735,15 @@ $("repGenerateBtn").addEventListener("click", () => withBtn($("repGenerateBtn"),
   setMsg(msg, "", "");
   const month = $("repMonth").value, year = parseInt($("repYear").value, 10);
   try {
+    if (repKind === "expenses") {
+      const e = await api("expensesReport", { month, year });
+      $("expReportMonth").textContent = `${month} ${year}`;
+      renderExpensesReport(e);
+      $("reportBlock").classList.add("hidden");
+      $("expReportBlock").classList.remove("hidden");
+      return;
+    }
+    $("expReportBlock").classList.add("hidden");
     const d = await api("report", { month, year });
     $("reportMonth").textContent = `${month} ${year}`;
     renderExtrasReport(d.extras, d.cleaning);
@@ -1577,6 +1851,54 @@ window.addEventListener("afterprint", () => {
 });
 $("printReportBtn").addEventListener("click", () => printReport("reportBlock"));
 
+// ---------- Expenses report (leaders): budgets with their breakdown, and company card usage ----------
+let repKind = "monthly";
+$("repKindBar").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-rep]");
+  if (!b) return;
+  repKind = b.dataset.rep;
+  document.querySelectorAll("#repKindBar .repkind").forEach((x) => x.classList.toggle("active", x === b));
+  $("reportBlock").classList.add("hidden");
+  $("expReportBlock").classList.add("hidden");
+});
+
+function renderExpensesReport(e) {
+  const b = e.budget;
+  const kindOf = (x) => (x.paymentType === "company_card" ? "Company card" : "Reimbursement");
+  const subOf = (x) => (x.paymentType === "company_card" ? "" : `${x.amountArs > 0 ? fmtArs(x.amountArs) + " · " : ""}${x.reimbursedOn === "" ? "pending" : x.reimbursedOn === "legacy" ? "returned earlier" : "returned " + fmtDate(x.reimbursedOn)}`);
+  const card = (title, p, rows) => {
+    const pct = p.budget > 0 ? Math.round((p.used / p.budget) * 100) : 0;
+    const over = p.remaining < 0;
+    const reimbRows = rows.filter((x) => x.paymentType !== "company_card");
+    const reimbArs = reimbRows.reduce((s, x) => s + (x.amountArs || 0), 0);
+    const pending = reimbRows.filter((x) => x.reimbursedOn === "").length;
+    const stat = (label, value, sub, color) => `<div><div class="xb-label">${label}</div><div class="xb-value"${color ? ` style="color:${color}"` : ""}>${value}</div>${sub ? `<div class="xb-sub">${sub}</div>` : ""}</div>`;
+    return `<div class="xb-card">
+      <div class="xb-top"><div class="xb-title">${esc(title)}</div><div class="xb-formula">${b.people} people × ${fmtMoney(p.perPerson)} = ${fmtMoney(p.budget)}</div></div>
+      <div class="xb-bar"><div style="width:${Math.min(100, pct)}%;${over ? "background:var(--red);" : ""}"></div></div>
+      <div class="xb-pct">${pct}% used</div>
+      <div class="xb-grid">
+        ${stat("COMPANY CARD", fmtMoney(p.card), "")}
+        ${stat("REIMBURSEMENT", fmtMoney(p.reimbursable), reimbRows.length ? `${fmtArs(reimbArs)}${pending ? " · " + pending + " pending" : " · returned"}` : "")}
+        ${stat("USED", fmtMoney(p.used), "")}
+        ${stat("LEFT", over ? "over by " + fmtMoney(-p.remaining) : fmtMoney(p.remaining), "", over ? "var(--red)" : "#1E6B45")}
+      </div>
+      <div class="xb-break">
+        <div class="xb-label">BREAKDOWN</div>
+        ${rows.length ? rows.map((x) => `<div class="xb-row"><div>${x.purchaseDate ? esc(fmtDate(x.purchaseDate)) : "no date"}</div><div>${esc(x.note || x.category)}${subOf(x) ? `<div class="xb-sub">${esc(subOf(x))}</div>` : ""}</div><div>${kindOf(x)}</div><div class="amount">${fmtMoney(x.amount)}</div></div>`).join("") : '<div class="xb-sub" style="padding:8px 0;">Nothing logged in this category.</div>'}
+        <div class="xb-row xb-used"><div>Used</div><div></div><div></div><div class="amount">${fmtMoney(p.used)}</div></div>
+      </div>
+    </div>`;
+  };
+  $("expBudgetCards").innerHTML = card("Monthly meal", b.meal, e.meal) + card("Office budget", b.office, e.office);
+  $("expCardTotal").textContent = fmtMoney(e.cardTotal);
+  $("expCardBody").innerHTML = e.card.length
+    ? e.card.map((x) => `<tr><td>${x.purchaseDate ? esc(fmtDate(x.purchaseDate)) : "no date"}</td><td>${esc(x.category)}</td><td>${esc(x.note)}</td><td>${x.ticketFileId ? "Yes" : ""}</td><td class="amount">${fmtMoney(x.amount)}</td></tr>`).join("")
+      + `<tr class="report-total-row"><td colspan="4">Total company card</td><td class="amount">${fmtMoney(e.cardTotal)}</td></tr>`
+    : '<tr><td colspan="5" class="empty">No company card purchases in this month.</td></tr>';
+}
+$("printExpReportBtn").addEventListener("click", () => printReport("expReportBlock"));
+
 // ---------- Cancel a pending request (members) ----------
 async function cancelRequest(id, btn) {
   if (!confirm("Cancel this request? Your team leader will be told.")) return;
@@ -1584,8 +1906,56 @@ async function cancelRequest(id, btn) {
     try { await api("cancelRequest", { id }); await sync(true); } catch (e) { alert(e.message); }
   });
 }
-$("myRequestsList").addEventListener("click", (e) => { const b = e.target.closest("[data-cancel]"); if (b) cancelRequest(b.dataset.cancel, b); });
-$("heroShiftList").addEventListener("click", (e) => { const b = e.target.closest("[data-cancel]"); if (b) cancelRequest(b.dataset.cancel, b); });
+// ---------- Time off: edit, change or cancel (members) ----------
+function requestEnd(r) { return r.kind === "holiday_work" ? r.holidayDate : r.endDate; }
+function isPast(r) { return requestEnd(r) < todayIso(); }
+function myRequestActions(r) {
+  const id = esc(r.id), past = isPast(r);
+  const btn = (attr, label, cls) => `<button class="link-btn${cls ? " " + cls : ""}" ${attr}="${id}">${label}</button>`;
+  if (r.status === "pending") {
+    return (r.kind !== "holiday_work" && !past ? btn("data-edit", "Edit dates") + " " : "") + btn("data-cancel", "Cancel request", "danger");
+  }
+  if (r.status !== "approved" || past) return "";
+  if (r.changeStatus === "change") return `<span class="sub">Change requested: ${esc(datesText({ startDate: r.changeStart, endDate: r.changeEnd }))} (waiting for your team leader)</span> ${btn("data-withdraw", "Withdraw")}`;
+  if (r.changeStatus === "cancel") return `<span class="sub">Cancellation requested (waiting for your team leader)</span> ${btn("data-withdraw", "Withdraw")}`;
+  return (r.kind !== "holiday_work" ? btn("data-change", "Request a change") + " " : "") + btn("data-reqcancel", "Request cancellation", "danger");
+}
+function memberRequestClick(e) {
+  const b = e.target.closest("[data-cancel],[data-edit],[data-change],[data-reqcancel],[data-withdraw]");
+  if (!b) return;
+  const id = b.dataset.cancel || b.dataset.edit || b.dataset.change || b.dataset.reqcancel || b.dataset.withdraw;
+  const r = requests.find((x) => x.id === id);
+  if (!r) return;
+  if (b.dataset.cancel) { cancelRequest(id, b); return; }
+  if (b.dataset.withdraw) {
+    if (!confirm("Withdraw this request? The approved request stays as it is.")) return;
+    withBtn(b, async () => { try { await api("withdrawChange", { id }); await sync(true); } catch (err) { alert(err.message); } });
+    return;
+  }
+  if (b.dataset.edit) {
+    openForm("Edit dates", [
+      { id: "start", label: "Start date", type: "date", value: r.startDate },
+      { id: "end", label: "End date", type: "date", value: r.endDate },
+      { id: "note", label: "Note", type: "text", value: r.note },
+    ], (v) => api("editRequest", { id, startDate: v.start, endDate: v.end || v.start, note: v.note }));
+    return;
+  }
+  if (b.dataset.change) {
+    openForm("Request a change", [
+      { id: "start", label: "New start date", type: "date", value: r.startDate },
+      { id: "end", label: "New end date", type: "date", value: r.endDate, hint: "Your team leader decides. Until then the approved request stays as it is." },
+      { id: "reason", label: "Reason", type: "text", value: "" },
+    ], (v) => api("requestChange", { id, startDate: v.start, endDate: v.end || v.start, reason: v.reason }));
+    return;
+  }
+  openForm("Request cancellation", [
+    { id: "reason", label: "Reason", type: "text", value: "", hint: "Your team leader decides. Until then the approved request stays as it is." },
+  ], (v) => api("requestCancel", { id, reason: v.reason }));
+}
+$("myRequestsList").addEventListener("click", memberRequestClick);
+$("heroShiftList").addEventListener("click", memberRequestClick);
+
+
 
 // ---------- Sales cleaning subscription ----------
 async function loadCleaningInfo() {
@@ -1639,7 +2009,7 @@ $("scheduleBackupBtn").addEventListener("click", () => withBtn($("scheduleBackup
 
 // ---------- Budget settings (leaders) ----------
 function renderSettings() {
-  if (!isLeader || !settings) return;
+  if (!isAdmin || !settings) return;
   const a = document.activeElement;
   if (a !== $("stOffice")) $("stOffice").value = settings.officePerPerson;
   if (a !== $("stMeal")) $("stMeal").value = settings.mealPerPerson;
@@ -1666,8 +2036,753 @@ $("stHeadcountList").addEventListener("click", (e) => {
   if (b) saveSettings({ headcount: settings.headcount.filter((h) => h.from !== b.dataset.hc) });
 });
 
+// ---------- Payroll (leaders): one payroll per team (salary, hours, extras, bonus, reimbursements), in USD ----------
+const payrolls = {};           // team -> what the server returned for the selected month
+const TEAM_NAME = { support: "Support", sales: "Sales" };
+const num2 = (n) => (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const round2 = (n) => Math.round(n * 100) / 100;
+// Handbook 8.4: monthly pay / 173.33 for a 40-hour week; other weeks use hours x 52 / 12 (30 h = 130).
+function rateOf(base, hours) { return base > 0 && hours > 0 ? base / (hours === 40 ? 173.33 : (hours * 52) / 12) : 0; }
+function pyMonthYear() { return { month: $("pyMonth").value, year: parseInt($("pyYear").value, 10) || new Date().getFullYear() }; }
+function pyYm() { const { month, year } = pyMonthYear(); return `${year}-${String(MONTHS.indexOf(month) + 1).padStart(2, "0")}`; }
+function shortYm(ym) { const [y, m] = ym.split("-"); return `${MONTHS[Number(m) - 1].slice(0, 3)} ${y}`; }
+function lastDayIso(ym) { const [y, m] = ym.split("-").map(Number); return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10); }
+function roleLabel(p) { return p.role === "leader" || p.role === "teamlead" ? "Team Leader" : p.team === "sales" ? "Sales" : "Support"; }
+function pyChip(text, kind) {
+  const c = { ok: ["#E4F2E9", "#1E6B45"], warn: ["#FDF1D6", "#6B4B00"], bad: ["#F7DAD6", "#8A2F26"], info: ["#E4EAF3", "#1F4C89"] }[kind];
+  return `<span class="py-chip" style="background:${c[0]};color:${c[1]}">${esc(text)}</span>`;
+}
+function pySubline(p) {
+  return `${roleLabel(p)}${p.hoursPerWeek !== 40 ? " · " + p.hoursPerWeek + " h/week" : ""} · ${p.hasSalary ? "$" + num2(p.rate) + "/h" : "rate needs a salary"}`;
+}
+function pyTeams() { return viewTeam === "all" ? ["support", "sales"] : [viewTeam]; }
+function pySection(team) { return document.querySelector(`#pyTeams .py-team[data-team="${team}"]`); }
+
+async function loadPayroll() {
+  if (!isLeader || !backendOk()) return;
+  const { month, year } = pyMonthYear();
+  try {
+    setMsg($("pyMsg"), "", "");
+    const teams = pyTeams();
+    const res = await Promise.all(teams.map((t) => api("payroll", { team: t, month, year })));
+    Object.keys(payrolls).forEach((k) => delete payrolls[k]);
+    teams.forEach((t, i) => { payrolls[t] = res[i]; });
+    renderPayroll();
+  } catch (e) { setMsg($("pyMsg"), e.message, "error"); }
+}
+
+function pyCardEdit(p, P) {
+  const uid = esc(p.userId);
+  const chips = [];
+  if (!p.hasSalary) chips.push(pyChip("Base salary not set yet", "bad"));
+  if (!p.loggedAny) chips.push(pyChip(`Nothing logged for ${P.month}`, "bad"));
+  if (p.edited) chips.push(pyChip("Edited by you", "warn"));
+  else if (p.loggedAny) chips.push(pyChip("From member log", "ok"));
+  if (p.bonus > 0) chips.push(pyChip("Bonus entered by you", "info"));
+  const field = (key, label, value, note, noteColor, bad) =>
+    `<div class="py-field"><div class="py-label">${esc(label)}</div>
+      <input type="number" step="0.01" min="0" data-uid="${uid}" data-f="${key}" value="${esc(value)}" aria-label="${esc(label)}: ${esc(p.name)}"${bad ? ' class="py-bad"' : ""}>
+      <div class="py-note"><span style="color:${noteColor || "var(--muted)"}">${esc(note || "")}</span><span data-pay="${uid}:${key}"></span></div></div>`;
+  const logged = (k) => (p.edited && p.logged[k] !== p.fin[k] ? "logged " + fmtDays(p.logged[k]) : "");
+  const AMBER = "#8A5A00";
+  const fields = [
+    field("base", "Base salary (USD)", p.hasSalary ? p.base : "", p.hasSalary ? "since " + shortYm(p.since) : "not set", p.hasSalary ? "" : "var(--red)", !p.hasSalary),
+    field("hours", "Hours per week", p.hoursPerWeek, p.since ? "since " + shortYm(p.since) : ""),
+    field("extraDays", "Extra days", p.fin.extraDays, logged("extraDays"), AMBER),
+    field("hours10", "Extra hours (1.0x)", p.fin.hours10, logged("hours10"), AMBER),
+    field("hours15", "Extra hours (1.5x)", p.fin.hours15, logged("hours15"), AMBER),
+    field("heroShift", "Hero Shifts", p.fin.heroShift, logged("heroShift"), AMBER),
+  ];
+  if (p.team === "sales") fields.push(field("cleaningSold", "Cleaning sold (USD)", p.fin.cleaningSold, "team share"));
+  fields.push(field("bonus", "Bonus (USD)", p.bonus, ""));
+  const reimb = p.reimbItems.length ? `<div class="py-reimb">
+      <div class="py-reimb-head"><div class="xb-label">REIMBURSEMENTS TO INCLUDE</div><div class="py-reimb-total" data-reimbtotal="${uid}"></div></div>
+      ${p.reimbItems.map((i) => `<label class="py-reimb-row"><input type="checkbox" data-reimb="${esc(i.id)}" data-uid="${uid}" data-usd="${i.amount}" data-ars="${i.amountArs || 0}"${i.included ? " checked" : ""} aria-label="Include ${esc(i.note || i.category)}"><span>${esc(fmtDate(i.purchaseDate))}</span><span>${esc(i.note || i.category)}${i.amountArs > 0 ? `<div class="xb-sub">${fmtArs(i.amountArs)}${i.rate > 0 ? " · rate " + fmtRate(i.rate) : ""}</div>` : ""}</span><span class="amount">${fmtMoney(i.amount)}</span></label>`).join("")}
+      <div class="xb-sub">Reimbursable expenses still pending up to ${esc(fmtDate(lastDayIso(P.ym)))}. Untick any you do not want paid yet. Confirming payroll marks the ticked ones as reimbursed.</div>
+    </div>` : "";
+  return `<div class="py-card" data-card="${uid}">
+    <div class="py-head">
+      <div><div class="py-name">${esc(p.name)}</div><div class="py-sub" data-sub="${uid}">${esc(pySubline(p))}</div></div>
+      <div><div class="py-total-label">TOTAL</div><div class="py-total-val" data-total="${uid}">${p.total === null ? "not set" : fmtMoney(p.total)}</div></div>
+    </div>
+    <div class="py-chips">${chips.join("")}</div>
+    <div class="py-grid">${fields.join("")}</div>
+    <div class="field-row" style="margin-top:12px;"><label for="bn_${uid}">Bonus note (optional)</label><input type="text" id="bn_${uid}" data-uid="${uid}" data-f="bonusNote" value="${esc(p.bonusNote)}"></div>
+    ${reimb}
+    <div class="actions" style="margin-top:12px;">
+      <button class="btn small" data-save="${uid}">Save</button>
+      ${p.edited ? `<button class="btn small ghost" data-reset="${uid}">Reset to logged</button>` : ""}
+    </div>
+  </div>`;
+}
+
+function pyCardView(p) {
+  const lines = [];
+  const add = (label, qty, amt) => lines.push(`<div class="py-line"><div>${esc(label)}</div><div class="py-qty">${esc(qty || "")}</div><div class="amount">${amt}</div></div>`);
+  if (!p.hasSalary) add("Base salary not set", "", "—");
+  else {
+    add("Base pay", "", num2(p.base));
+    if (p.fin.extraDays) add("Extra days", `${fmtDays(p.fin.extraDays)} day${p.fin.extraDays === 1 ? "" : "s"}`, num2(p.pay.days));
+    if (p.fin.hours10) add("Extra hours (1.0x)", `${fmtDays(p.fin.hours10)} h`, num2(p.pay.h10));
+    if (p.fin.hours15) add("Extra hours (1.5x)", `${fmtDays(p.fin.hours15)} h`, num2(p.pay.h15));
+    if (p.fin.heroShift) add("Hero Shift", `${fmtDays(p.fin.heroShift)} shift${p.fin.heroShift === 1 ? "" : "s"}`, num2(p.pay.hero));
+    if (p.pay.cleaning) add("Cleaning subscription share", "", num2(p.pay.cleaning));
+    if (p.pay.bonus) add("Bonus" + (p.bonusNote ? ": " + p.bonusNote : ""), "", num2(p.pay.bonus));
+    if (p.reimbUsd) { const n = p.reimbItems.filter((i) => i.included).length; add(`Reimbursements (${n} expense${n === 1 ? "" : "s"})`, fmtArs(p.reimbArs), num2(p.reimbUsd)); }
+  }
+  return `<div class="py-card">
+    <div class="py-head">
+      <div><div class="py-name">${esc(p.name)}</div><div class="py-sub">${esc(pySubline(p))}</div></div>
+      <div><div class="py-total-label">TOTAL</div><div class="py-total-val">${p.total === null ? "—" : fmtMoney(p.total)}</div></div>
+    </div>
+    <div class="py-lines">${lines.join("")}</div>
+  </div>`;
+}
+
+function pyPrintHtml(P) {
+  const confirmed = P.status === "confirmed";
+  return `<div class="report-head"><p class="section-label" style="margin:0;">PAYROLL — ${esc(TEAM_NAME[P.team].toUpperCase())} — ${esc(P.month)} ${esc(P.year)} (${confirmed ? "CONFIRMED" : "DRAFT"}, CONFIDENTIAL, USD)</p></div>`
+    + P.people.map(pyCardView).join("")
+    + `<div class="py-total"><div>Total payroll ${esc(TEAM_NAME[P.team])}, ${P.people.length} people</div><div>${fmtMoney(P.totalSoFar)}</div></div>`
+    + (P.team === "sales" ? `<p class="report-note">Cleaning subscription (Sales): ${fmtMoney(P.poolTotal)} sold · ${P.percent}% pool ${fmtMoney((P.poolTotal * P.percent) / 100)} · ${P.salesCount} Sales people · ${fmtMoney(P.share)} each.</p>` : "");
+}
+
+function pySectionHtml(team) {
+  return `<div class="py-team" data-team="${team}">
+    <div class="report-head">
+      <p class="section-label py-title" style="margin:0;"></p>
+      <div class="actions"><button class="btn ghost small hidden py-reopen">Reopen month</button><button class="btn ghost small py-print">Print</button></div>
+    </div>
+    <div class="admin-note py-banner"></div>
+    <div class="py-cards"></div>
+    <div class="py-total"><div class="py-bar-label"></div><div class="py-bar-value"></div></div>
+    <button class="btn py-confirm">Confirm payroll</button>
+    <p class="rule-note py-confirm-note">Confirming freezes the month for ${esc(TEAM_NAME[team])}: later changes to anyone's log will not change it, and you can reopen it. It also marks the ticked reimbursements as reimbursed. Changing a base salary or hours per week asks from which month it applies.</p>
+    <div class="report-block print-only py-printview" id="pyPrint_${team}"></div>
+  </div>`;
+}
+
+function renderPayroll() {
+  const teams = pyTeams().filter((t) => payrolls[t]);
+  $("pyTeams").innerHTML = teams.length ? teams.map(pySectionHtml).join("") : '<p class="empty">Open this section to load the month.</p>';
+  teams.forEach(fillPayrollSection);
+  $("pyAllBar").classList.toggle("hidden", teams.length < 2);
+}
+
+function fillPayrollSection(team) {
+  const P = payrolls[team], sec = pySection(team);
+  const q = (sel) => sec.querySelector(sel);
+  const confirmed = P.status === "confirmed", people = P.people, blocked = P.blocked;
+  q(".py-title").innerHTML = `PAYROLL — ${esc(TEAM_NAME[team].toUpperCase())} · ${esc(P.month)} ${esc(P.year)} ${pyChip(confirmed ? "CONFIRMED" : "OPEN", confirmed ? "ok" : "warn")} ${pyChip("USD", "info")}${confirmed ? " " + pyChip("CONFIDENTIAL", "warn") : ""}`;
+  q(".py-reopen").classList.toggle("hidden", !confirmed);
+  q(".py-confirm").classList.toggle("hidden", confirmed);
+  q(".py-confirm-note").classList.toggle("hidden", confirmed);
+  const banner = q(".py-banner");
+  if (confirmed) {
+    banner.innerHTML = `Confirmed on ${esc(fmtDate(String(P.confirmedAt).slice(0, 10)))} by ${esc(P.confirmedBy)}. Reimbursements were marked as reimbursed on ${esc(fmtDate(P.paidOn))}. This is what gets printed for accounting.`;
+  } else {
+    const issues = [];
+    people.forEach((p) => {
+      if (!p.hasSalary) issues.push(`${p.name} has no base salary yet`);
+      if (!p.loggedAny) issues.push(`${p.name} has nothing logged for ${P.month}`);
+      if (p.edited) issues.push(`${p.name} was edited by you`);
+    });
+    banner.innerHTML = issues.length ? `<strong>${issues.length} thing${issues.length === 1 ? "" : "s"} need a look.</strong> ${esc(issues.join("; "))}. Extras start from what members logged in Log Extras. Anything you change is final and the member's own log is not altered.` : "Extras start from what members logged in Log Extras. Anything you change is final and the member's own log is not altered.";
+  }
+  q(".py-cards").innerHTML = people.length ? people.map((p) => (confirmed ? pyCardView(p) : pyCardEdit(p, P))).join("") : '<p class="empty">Nobody on this team yet.</p>';
+  q(".py-printview").innerHTML = pyPrintHtml(P);
+  q(".py-bar-label").textContent = confirmed || !blocked.length ? `Total payroll ${TEAM_NAME[team]}, ${people.length} people` : `Total so far (${P.salaried} of ${people.length} salaries set)`;
+  q(".py-bar-value").textContent = fmtMoney(P.totalSoFar);
+  const btn = q(".py-confirm");
+  btn.disabled = blocked.length > 0;
+  btn.textContent = blocked.length ? `Confirm payroll: set ${blocked[0]}'s salary first${blocked.length > 1 ? ` (+${blocked.length - 1} more)` : ""}` : `Confirm ${TEAM_NAME[team]} payroll for ${P.month} ${P.year}`;
+  if (!confirmed) recalcPayroll(team);
+}
+
+// Live numbers while the leader types: the same formulas as the server, nothing is saved until Save.
+function recalcPayroll(team) {
+  const P = payrolls[team], sec = pySection(team);
+  if (!P || !sec || P.status === "confirmed") return;
+  const q = (uid, f) => sec.querySelector(`[data-uid="${uid}"][data-f="${f}"]`);
+  const val = (uid, f) => { const el = q(uid, f); return el ? parseFloat(el.value) || 0 : 0; };
+  const set = (sel, text) => { const el = sec.querySelector(sel); if (el) el.textContent = text; };
+  const sales = P.people.filter((p) => p.team === "sales");
+  const pool = sales.reduce((s, p) => s + val(p.userId, "cleaningSold"), 0);
+  const share = sales.length ? round2((pool * P.percent) / 100 / sales.length) : 0;
+  let sum = 0;
+  P.people.forEach((p) => {
+    const uid = p.userId, base = val(uid, "base"), hours = val(uid, "hours") || 40;
+    const pay = (key, v) => set(`[data-pay="${uid}:${key}"]`, v ? num2(v) : "");
+    const boxes = [...sec.querySelectorAll(`[data-reimb][data-uid="${uid}"]`)].filter((c) => c.checked);
+    const rUsd = round2(boxes.reduce((s, c) => s + parseFloat(c.dataset.usd), 0)), rArs = round2(boxes.reduce((s, c) => s + parseFloat(c.dataset.ars), 0));
+    set(`[data-reimbtotal="${uid}"]`, `${fmtMoney(rUsd)} · ${fmtArs(rArs)}`);
+    if (!(base > 0)) {
+      ["extraDays", "hours10", "hours15", "heroShift", "cleaningSold", "bonus"].forEach((k) => pay(k, 0));
+      set(`[data-total="${uid}"]`, "not set");
+      set(`[data-sub="${uid}"]`, `${roleLabel(p)}${hours !== 40 ? " · " + hours + " h/week" : ""} · rate needs a salary`);
+      return;
+    }
+    const rate = rateOf(base, hours);
+    const days = round2(val(uid, "extraDays") * 8 * rate), h10 = round2(val(uid, "hours10") * rate), h15 = round2(val(uid, "hours15") * rate * 1.5);
+    const hero = round2(val(uid, "heroShift") * 8 * rate * 1.5), bonus = round2(val(uid, "bonus")), cleaning = p.team === "sales" ? share : 0;
+    pay("extraDays", days); pay("hours10", h10); pay("hours15", h15); pay("heroShift", hero); pay("cleaningSold", cleaning); pay("bonus", bonus);
+    const total = round2(base + days + h10 + h15 + hero + cleaning + bonus + rUsd);
+    set(`[data-total="${uid}"]`, fmtMoney(total));
+    set(`[data-sub="${uid}"]`, `${roleLabel(p)}${hours !== 40 ? " · " + hours + " h/week" : ""} · $${num2(round2(rate))}/h`);
+    sum += total;
+  });
+  set(".py-bar-value", fmtMoney(round2(sum)));
+}
+
+async function pySave(team, uid, btn) {
+  const P = payrolls[team], sec = pySection(team);
+  const p = P.people.find((x) => x.userId === uid);
+  const { month, year } = pyMonthYear();
+  const get = (f) => { const el = sec.querySelector(`[data-uid="${uid}"][data-f="${f}"]`); return el ? el.value : undefined; };
+  await withBtn(btn, async () => {
+    try {
+      const base = parseFloat(get("base")), hours = parseFloat(get("hours"));
+      const baseChanged = !isNaN(base) && base !== p.base, hoursChanged = !isNaN(hours) && hours !== p.hoursPerWeek;
+      if (baseChanged || hoursChanged) {
+        const from = prompt("This salary or hours change applies from which month? (YYYY-MM)", pyYm());
+        if (from === null) return;
+        const payload = { userId: uid, from: from.trim() };
+        if (baseChanged) payload.monthlyBase = base;
+        if (hoursChanged) payload.hoursPerWeek = hours;
+        await api("setSalary", payload);
+      }
+      const nums = {};
+      ["extraDays", "hours10", "hours15", "heroShift", "cleaningSold", "bonus"].forEach((k) => { nums[k] = parseFloat(get(k)) || 0; });
+      const note = get("bonusNote") || "";
+      const changed = ["extraDays", "hours10", "hours15", "heroShift", "cleaningSold"].some((k) => nums[k] !== p.fin[k]) || nums.bonus !== p.bonus || note !== p.bonusNote;
+      if (changed) await api("setPayroll", Object.assign({ userId: uid, month, year, bonusNote: note }, nums));
+      await loadPayroll();
+    } catch (e) { alert(e.message); }
+  });
+}
+const pyTeamOf = (el) => { const s = el.closest(".py-team"); return s ? s.dataset.team : null; };
+$("pyTeams").addEventListener("input", (e) => { if (e.target.matches("[data-f]")) recalcPayroll(pyTeamOf(e.target)); });
+$("pyTeams").addEventListener("change", async (e) => {
+  if (!e.target.matches("[data-reimb]")) return;
+  const team = pyTeamOf(e.target), sec = pySection(team), { month, year } = pyMonthYear();
+  const ids = [...sec.querySelectorAll("[data-reimb]")].filter((c) => !c.checked).map((c) => c.dataset.reimb);
+  try { await api("payrollExclude", { team, month, year, expenseIds: ids }); await loadPayroll(); } catch (err) { alert(err.message); }
+});
+$("pyTeams").addEventListener("click", (e) => {
+  const team = pyTeamOf(e.target);
+  if (!team) return;
+  const s = e.target.closest("[data-save]"), r = e.target.closest("[data-reset]");
+  const conf = e.target.closest(".py-confirm"), reo = e.target.closest(".py-reopen"), pr = e.target.closest(".py-print");
+  const { month, year } = pyMonthYear();
+  if (s) pySave(team, s.dataset.save, s);
+  if (r) {
+    if (!confirm("Go back to what the member logged for this month?")) return;
+    withBtn(r, async () => { try { await api("clearPayroll", { userId: r.dataset.reset, month, year }); await loadPayroll(); } catch (err) { alert(err.message); } });
+  }
+  if (pr && payrolls[team]) printReport("pyPrint_" + team);
+  if (conf) withBtn(conf, async () => {
+    const P = payrolls[team];
+    const n = P ? P.people.reduce((t, p) => t + p.reimbItems.filter((i) => i.included).length, 0) : 0;
+    if (!confirm(`Confirm ${TEAM_NAME[team]} payroll for ${month} ${year}? It freezes the month${n ? ` and marks ${n} reimbursement(s) as reimbursed today` : ""}. You can reopen it later.`)) return;
+    try {
+      payrolls[team] = await api("confirmPayroll", { team, month, year, date: todayIso() });
+      renderPayroll();
+      await sync(true);
+    } catch (err) { alert(err.message); }
+  });
+  if (reo) withBtn(reo, async () => {
+    if (!confirm(`Reopen ${TEAM_NAME[team]} ${month} ${year}? Its reimbursements go back to pending and the numbers become live again.`)) return;
+    try { await api("reopenPayroll", { team, month, year }); await loadPayroll(); await sync(true); } catch (err) { alert(err.message); }
+  });
+});
+$("pyMonth").addEventListener("change", loadPayroll);
+$("pyYear").addEventListener("change", loadPayroll);
+$("pyPrintAllBtn").addEventListener("click", () => {
+  const teams = pyTeams().filter((t) => payrolls[t]);
+  if (!teams.length) return;
+  $("pyPrintAll").innerHTML = teams.map((t) => `<div style="page-break-after:always;">${pyPrintHtml(payrolls[t])}</div>`).join("");
+  printReport("pyPrintAll");
+});
+
+// ---------- Schedule: visible to everyone; each team's leader (and the admin) plans it ----------
+const schData = {};                                  // "YYYY-MM" -> schedule from the server
+let schView = "week", schTeams = "both", schWeekStart = null, schMonth = null, schEditing = false, schEditTeam = "support";
+const DOW3 = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DOW1 = ["M", "T", "W", "T", "F", "S", "S"];
+
+function isoAdd(iso, n) { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function mondayOf(iso) { const d = new Date(iso + "T00:00:00Z"); return isoAdd(iso, -((d.getUTCDay() + 6) % 7)); }
+function dowIndex(iso) { return (new Date(iso + "T00:00:00Z").getUTCDay() + 6) % 7; }
+function ymOf(iso) { return iso.slice(0, 7); }
+function ymParts(ym) { const [y, m] = ym.split("-"); return { month: MONTHS[Number(m) - 1], year: Number(y) }; }
+function ymFor(month, year) { return `${year}-${String(MONTHS.indexOf(month) + 1).padStart(2, "0")}`; }
+function monthDatesOf(ym) { const { month, year } = ymParts(ym); const n = new Date(Date.UTC(year, MONTHS.indexOf(month) + 1, 0)).getUTCDate(); return Array.from({ length: n }, (_, i) => `${ym}-${String(i + 1).padStart(2, "0")}`); }
+function weekDatesOf(start) { return Array.from({ length: 7 }, (_, i) => isoAdd(start, i)); }
+function shortDate(iso) { const d = new Date(iso + "T00:00:00Z"); return `${DOW3[dowIndex(iso)]} ${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCDate()}`; }
+
+// Current date and time in Buenos Aires (all shifts are in that time zone).
+function nowAr() {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+  const g = (t) => parts.find((p) => p.type === t).value;
+  return { date: `${g("year")}-${g("month")}-${g("day")}`, minutes: Number(g("hour")) * 60 + Number(g("minute")) };
+}
+const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+function fmtHr(t) { const h = Number(t.slice(0, 2)), m = t.slice(3, 5); return `${((h + 11) % 12) + 1}${m === "00" ? "" : ":" + m}`; }
+function hoursLabel(s, e) { return `${fmtHr(s)}-${fmtHr(e)}`; }
+function clock12(min) { const h = Math.floor(min / 60), m = min % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; }
+
+const SH_FIXED = { AM: ["#E4EAF3", "#1F4C89"], PM: ["#E4F2E9", "#1E6B45"], EVE: ["#EDE6F5", "#5B3A8A"], WKD: ["#FDF1D6", "#6B4B00"] };
+const SH_MORE = [["#DCEFF2", "#145A66"], ["#FBE3EC", "#8A2A4D"], ["#EAF0D8", "#44601A"], ["#F1E4D6", "#7A4A1E"]];
+function cellColors(c) {
+  if (c.k === "hero") return ["#1F4C89", "#FFFFFF"];
+  if (c.k === "pto") return ["#F7DAD6", "#8A2F26"];
+  if (c.k === "hol") return ["#EDEEF0", "#4A4A4A"];
+  if (c.k === "off") return ["transparent", "#6A6A6A"];
+  if (c.k === "custom") return ["#DCEFF2", "#145A66"];
+  if (SH_FIXED[c.c]) return SH_FIXED[c.c];
+  let h = 0; for (const ch of c.c) h = (h * 31 + ch.charCodeAt(0)) % 997;
+  return SH_MORE[h % SH_MORE.length];
+}
+function cellLabel(c) { return c.k === "off" ? "—" : c.k === "custom" ? hoursLabel(c.s, c.e) : c.c; }
+// Text for Excel and print: the code with its hours, plus "(home)" for a Home Office day.
+function cellText(c) {
+  if (!c || c.k === "off") return "";
+  let t;
+  if (c.k === "custom") t = hoursLabel(c.s, c.e) + " (custom)";
+  else if (c.k === "shift" || c.k === "hero") t = c.s ? (c.c === hoursLabel(c.s, c.e) ? c.c : `${c.c} ${hoursLabel(c.s, c.e)}`) : c.c;
+  else t = c.k === "pto" ? "PTO" : "HOL";
+  return t + (c.h ? " (home)" : "");
+}
+
+async function loadScheduleMonth(ym, force) {
+  if (schData[ym] && !force) return schData[ym];
+  const { month, year } = ymParts(ym);
+  schData[ym] = await api("schedule", { month, year });
+  return schData[ym];
+}
+function schInit() {
+  const n = nowAr();
+  if (!schWeekStart) schWeekStart = mondayOf(n.date);
+  if (!schMonth) schMonth = ymOf(n.date);
+  if (me.role === "teamlead") schEditTeam = me.team;
+  else if (!schEditTeam) schEditTeam = me.team || "support";
+}
+function schDates() { return schView === "week" ? weekDatesOf(schWeekStart) : monthDatesOf(schMonth); }
+async function loadScheduleView(force) {
+  if (!me || !backendOk()) return;
+  schInit();
+  const need = new Set(schDates().map(ymOf));
+  need.add(ymOf(nowAr().date));
+  if (schEditing) { need.add(schMonth); const p = ymParts(schMonth); need.add(p.month === "January" ? `${p.year - 1}-12` : ymFor(MONTHS[MONTHS.indexOf(p.month) - 1], p.year)); }
+  try {
+    setMsg($("schMsg"), "", "");
+    await Promise.all([...need].map((ym) => loadScheduleMonth(ym, force)));
+    renderSchedule();
+  } catch (e) { setMsg($("schMsg"), e.message, "error"); }
+}
+function canEditTeam(team) { return !!me && (me.role === "leader" || (me.role === "teamlead" && me.team === team)); }
+function teamsShown() { return schTeams === "both" ? ["support", "sales"] : [schTeams]; }
+function rowsFor(team, dates) {
+  const seen = {}, rows = [];
+  [...new Set(dates.map(ymOf))].forEach((ym) => {
+    const sc = schData[ym];
+    if (sc) sc.teams[team].rows.forEach((r) => { if (!seen[r.userId]) { seen[r.userId] = 1; rows.push({ userId: r.userId, name: r.name }); } });
+  });
+  return rows.sort((a, b) => a.name.localeCompare(b.name));
+}
+function cellAt(team, uid, iso) {
+  const sc = schData[ymOf(iso)];
+  if (!sc) return null;
+  const row = sc.teams[team].rows.find((r) => r.userId === uid);
+  return row ? row.cells[Number(iso.slice(8, 10)) - 1] : null;
+}
+const OFFCELL = { c: "", k: "off", s: "", e: "", h: 0, x: 0 };
+function holidayOn(iso) { const sc = schData[ymOf(iso)]; return sc ? sc.holidays.find((h) => h.date === iso) : null; }
+
+function gridHtml(team, dates, opts) {
+  const month = dates.length > 7, today = nowAr().date;
+  const cols = month ? `88px repeat(${dates.length}, 30px)` : `82px repeat(${dates.length}, minmax(0, 1fr))`;
+  const head = dates.map((d) => {
+    const hol = holidayOn(d), wk = dowIndex(d) >= 5, isToday = d === today;
+    const bg = isToday ? "var(--brand)" : hol ? "#4A4A4A" : wk ? "#D5D8DD" : "#F1F3F6", color = isToday || hol ? "#FFFFFF" : "#2A2A2A";
+    return `<div class="sg-head" style="background:${bg};color:${color};" title="${hol ? esc(hol.name) : ""}">${month ? DOW1[dowIndex(d)] : DOW3[dowIndex(d)]}<div class="sg-num">${Number(d.slice(8, 10))}</div></div>`;
+  }).join("");
+  const rows = rowsFor(team, dates).map((r) => {
+    const cells = dates.map((d) => {
+      const c = cellAt(team, r.userId, d) || OFFCELL, [bg, fg] = cellColors(c);
+      const click = opts && opts.clickable ? ` data-sg-uid="${esc(r.userId)}" data-sg-date="${d}" data-sg-code="${esc(c.k === "custom" ? "CUS" : c.k === "off" ? "" : c.c)}" role="button" tabindex="0"` : "";
+      return `<div class="sg-cell${c.x ? " sg-x" : ""}${d === today ? " sg-today" : ""}"${click} style="background:${bg};color:${fg};" data-cell="${esc(r.userId)}:${d}">${esc(cellLabel(c))}${!month && c.h ? '<div class="sg-sub">home</div>' : c.h ? '<div class="sg-sub">h</div>' : '<div class="sg-sub"></div>'}</div>`;
+    }).join("");
+    const you = me && r.userId === me.id;
+    return `<div class="sg-row${you ? " sg-you" : ""}" style="grid-template-columns:${cols};"><div class="sg-name">${esc(r.name)}${you ? '<span class="sg-note">you</span>' : ""}</div>${cells}</div>`;
+  }).join("");
+  return `<div class="sg-wrap"><div class="sg-inner${month ? " sg-month" : ""}" style="min-width:${month ? 88 + dates.length * 32 : 470}px;">
+    <div class="sg-row" style="grid-template-columns:${cols};"><div></div>${head}</div>${rows || '<div class="empty">Nobody on this team yet.</div>'}
+  </div></div>`;
+}
+
+function renderToday() {
+  const n = nowAr(), sc = schData[ymOf(n.date)], el = $("schToday");
+  if (!sc) { el.innerHTML = ""; return; }
+  const day = Number(n.date.slice(8, 10));
+  const groups = [];
+  let onCount = 0; const later = [], away = [];
+  ["support", "sales"].forEach((team) => {
+    const on = [];
+    sc.teams[team].rows.forEach((r) => {
+      const c = r.cells[day - 1];
+      if (c.k === "pto") { away.push(r.name); return; }
+      if ((c.k === "shift" || c.k === "custom" || c.k === "hero") && c.s) {
+        const first = r.name.split(" ")[0], lbl = `${first} · ${hoursLabel(c.s, c.e)}`;
+        if (toMin(c.s) <= n.minutes && n.minutes < toMin(c.e)) on.push({ lbl, c });
+        else if (toMin(c.s) > n.minutes) later.push(`${first} from ${clock12(toMin(c.s))} (${hoursLabel(c.s, c.e)})`);
+      }
+    });
+    onCount += on.length;
+    groups.push({ team, on });
+  });
+  const hol = sc.holidays.find((h) => h.date === n.date);
+  const d = new Date(n.date + "T00:00:00Z");
+  el.innerHTML = `<div class="sch-today-card">
+    <div class="xb-label">TODAY — ${esc(DOW3[dowIndex(n.date)].toUpperCase())}, ${esc(MONTHS[d.getUTCMonth()].slice(0, 3).toUpperCase())} ${d.getUTCDate()} · ${esc(clock12(n.minutes))} ARGENTINA TIME${hol ? " · " + esc(hol.name.toUpperCase()) : ""}</div>
+    <div class="sch-today-title" data-oncount="${onCount}">${onCount} ${onCount === 1 ? "person" : "people"} on shift now</div>
+    ${groups.map((g) => `<div class="sch-today-row"><div class="sch-today-team">${esc(TEAM_NAME[g.team].toUpperCase())}</div><div class="sch-chips">${g.on.length ? g.on.map((p) => { const [bg, fg] = cellColors(p.c); return `<span class="sch-chip" style="background:${bg};color:${fg};">${esc(p.lbl)}</span>`; }).join("") : '<span class="sub">nobody right now</span>'}</div></div>`).join("")}
+    <div class="sub" style="border-top:1px solid var(--rule);padding-top:8px;">Later today: ${later.length ? esc(later.join(", ")) : "nobody"}. Time off today: ${away.length ? esc(away.join(", ")) : "nobody"}.</div>
+  </div>`;
+}
+
+function legendHtml() {
+  const map = {}, order = [], sc = schData[ymOf(schDates()[0])];
+  if (sc) teamsShown().forEach((team) => sc.teams[team].shifts.forEach((s) => {
+    const key = `${s.code}|${s.start}|${s.end}`;
+    if (!map[key]) { map[key] = { s, teams: [] }; order.push(key); }
+    map[key].teams.push(team);
+  }));
+  const items = order.map((key) => {
+    const { s, teams } = map[key], [bg, fg] = cellColors({ k: "shift", c: s.code });
+    const only = teams.length === 1 && teamsShown().length > 1 ? ` (${TEAM_NAME[teams[0]]} only)` : "";
+    return `<span class="sch-leg"><span class="sch-code" style="background:${bg};color:${fg};">${esc(s.code)}</span>${esc(hoursLabel(s.start, s.end))}${only}</span>`;
+  });
+  items.push(`<span class="sch-leg"><span class="sch-code" style="background:#1F4C89;color:#fff;">HERO</span>10-5 holiday cover</span>`);
+  items.push(`<span class="sch-leg"><span class="sch-code" style="background:#F7DAD6;color:#8A2F26;">PTO</span>time off</span>`);
+  items.push(`<span class="sch-leg"><span class="sch-code" style="background:#EDEEF0;color:#4A4A4A;">HOL</span>US holiday, off</span>`);
+  return items.join("");
+}
+
+function renderSchedule() {
+  if (!me) return;
+  schInit();
+  const dates = schDates();
+  renderToday();
+  document.querySelectorAll("#schViewBar .repkind").forEach((b) => b.classList.toggle("active", b.dataset.schview === schView));
+  document.querySelectorAll("#schTeamBar .repkind").forEach((b) => b.classList.toggle("active", b.dataset.schteam === schTeams));
+  $("schNavLabel").textContent = schView === "week" ? `${shortDate(dates[0])} – ${shortDate(dates[6])}, ${dates[6].slice(0, 4)}` : `${ymParts(schMonth).month} ${ymParts(schMonth).year}`;
+  const thisWeek = schView === "week" && schWeekStart === mondayOf(nowAr().date), thisMonth = schView === "month" && schMonth === ymOf(nowAr().date);
+  $("schNavSub").textContent = thisWeek || thisMonth ? (schView === "week" ? "THIS WEEK" : "THIS MONTH") : "";
+  $("schXlsWeekBtn").textContent = schView === "week" ? "Excel: week" : "Excel: " + ymParts(exportMonthYm()).month;
+  $("schXlsMonthBtn").textContent = "Excel: " + ymParts(exportMonthYm()).month;
+  $("schXlsMonthBtn").classList.toggle("hidden", schView === "month");
+  $("schGrid").innerHTML = teamsShown().map((team) => `<div class="sch-team"><div class="xb-label" style="margin-bottom:6px;">${esc(TEAM_NAME[team].toUpperCase())}${schData[ymOf(dates[0])] && schView === "month" && !schData[ymOf(dates[0])].teams[team].rows.some((r) => r.planned) ? ' <span style="color:var(--red);">· NOT PLANNED YET</span>' : ""}</div>${gridHtml(team, dates, null)}</div>`).join("");
+  $("schLegend").innerHTML = legendHtml();
+  $("schEditBtn").classList.toggle("hidden", !(me.role === "leader" || me.role === "teamlead"));
+  $("schEditBtn").textContent = schEditing ? "Done" : "Edit schedule";
+  renderPlanner();
+}
+
+// ---------- Planner (leaders) ----------
+function planTeamUsers(team) { const sc = schData[schMonth]; return sc ? sc.teams[team].rows : []; }
+function weekendRole(pattern) { const sat = !!pattern[5], sun = !!pattern[6]; return sat && !sun ? "sat" : sun && !sat ? "sun" : !sat && !sun ? "none" : "both"; }
+
+function renderPlanner() {
+  if (schDirty > 0) return;   // unsaved edits in the planner: do not redraw over them
+  const box = $("schPlanner");
+  if (!schEditing || !me || !(me.role === "leader" || me.role === "teamlead")) { box.classList.add("hidden"); return; }
+  const team = schEditTeam, sc = schData[schMonth];
+  if (!sc) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  const T = sc.teams[team], { month, year } = ymParts(schMonth), dates = monthDatesOf(schMonth);
+  const shiftOpts = (sel) => `<option value="">—</option>` + T.shifts.map((s) => `<option value="${esc(s.code)}"${s.code === sel ? " selected" : ""}>${esc(s.code)}</option>`).join("");
+  const pill = (t) => `<button class="repkind${t === team ? " active" : ""}" data-sch-editteam="${t}">${TEAM_NAME[t]}</button>`;
+  const usual = T.rows.map((r) => `<div class="sp-row" data-sp-uid="${esc(r.userId)}">
+      <div class="sp-name">${esc(r.name)}${r.planned ? "" : '<span class="sg-note">not planned</span>'}</div>
+      <div class="sp-sels">${DOW3.map((d, i) => `<label class="sp-sel"><span>${d}</span><select data-sp-day="${i}" aria-label="${esc(r.name)} ${d}">${shiftOpts(r.pattern[i])}</select></label>`).join("")}</div>
+      <label class="sp-from"><span>starts on day</span><input type="number" min="1" max="31" value="${r.fromDay}" data-sp-from aria-label="${esc(r.name)} starts on day"></label>
+    </div>`).join("");
+  const wk = T.shifts.find((s) => s.code === "WKD") || T.shifts[0];
+  const prev = schData[(() => { const p = ymParts(schMonth); return p.month === "January" ? `${p.year - 1}-12` : ymFor(MONTHS[MONTHS.indexOf(p.month) - 1], p.year); })()];
+  const inRotation = (r) => {
+    const pr = prev ? prev.teams[team].rows.find((x) => x.userId === r.userId) : null;
+    return weekendRole(r.pattern) !== "none" || (pr && weekendRole(pr.pattern) !== "none");
+  };
+  const roles = team === "support" ? `<div class="xb-label" style="margin:22px 0 4px;">2. WEEKEND ROLES (SUPPORT)</div>
+    <div class="sub" style="margin-bottom:8px;">Fixed for the whole month. Every Saturday or Sunday follows the role, with the ${esc(wk ? wk.name : "weekend")} shift.</div>
+    ${T.rows.map((r) => { const cur = weekendRole(r.pattern); return `<div class="sp-role" data-role-uid="${esc(r.userId)}"><div class="sp-name">${esc(r.name)}${inRotation(r) ? "" : '<span class="sg-note">not in rotation</span>'}</div><div class="sp-seg">${[["sat", "Saturday"], ["sun", "Sunday"], ["none", "None"]].map(([k, l]) => `<button class="${cur === k ? "on" : ""}" data-role-set="${k}">${l}</button>`).join("")}</div></div>`; }).join("")}
+    <div class="actions" style="margin-top:8px;"><button class="btn small ghost" id="schRotateBtn">Rotate roles</button><span class="sub">Moves each person in the rotation to the next role (Saturday, Sunday, none). You can still change any of them.</span></div>` : "";
+  const mine = new Set(T.rows.map((r) => r.userId));
+  const manual = sc.changes.filter((c) => mine.has(c.userId)).sort((a, b) => a.date.localeCompare(b.date));
+  const nameById = {}; T.rows.forEach((r) => { nameById[r.userId] = r.name; });
+  const labelOf = (code, s, e) => (code === "" ? "off" : code === "CUS" ? `custom ${hoursLabel(s, e)}` : code);
+  const autos = [];
+  sc.holidays.forEach((h) => {
+    const vols = requests.filter((r) => r.kind === "holiday_work" && r.status === "approved" && r.holidayDate === h.date && (r.team || (usersById[r.requesterId] || {}).team) === team);
+    autos.push({ date: h.date, title: `${shortDate(h.date)} · ${h.name}`, detail: vols.length ? `Everyone off. Hero Shift 10-5: ${vols.map((v) => nameOf(v.requesterId)).join(", ")}.` : "Everyone off. No Hero Shift volunteer yet." });
+  });
+  requests.filter((r) => r.status === "approved" && r.kind === "pto" && mine.has(r.requesterId) && r.startDate <= dates[dates.length - 1] && r.endDate >= dates[0])
+    .forEach((r) => autos.push({ date: r.startDate < dates[0] ? dates[0] : r.startDate, title: `${shortDate(r.startDate < dates[0] ? dates[0] : r.startDate)} · ${nameOf(r.requesterId)}: PTO`, detail: `Approved PTO ${datesText(r)}.` }));
+  const changes = [
+    ...manual.map((c) => ({ date: c.date, html: `<div class="sp-chg"><div><div class="sp-chg-t">${esc(shortDate(c.date))} · ${esc(nameById[c.userId])}: ${esc(labelOf(c.code, c.start, c.end))}</div>${c.note ? `<div class="sub">${esc(c.note)}</div>` : ""}</div><button class="btn small ghost" data-chg-del="${esc(c.id)}">Remove</button></div>` })),
+    ...autos.map((a) => ({ date: a.date, html: `<div class="sp-chg"><div><div class="sp-chg-t">${esc(a.title)}</div><div class="sub">${esc(a.detail)}</div></div><span class="badge approved">automatic</span></div>` })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
+  const shifts = T.shifts.map((s) => { const [bg, fg] = cellColors({ k: "shift", c: s.code }); return `<div class="sp-chg"><div class="sp-shift"><span class="sch-code" style="background:${bg};color:${fg};">${esc(s.code)}</span><div><div class="sp-chg-t">${esc(s.name)}</div><div class="sub">${esc(clock12(toMin(s.start)))} – ${esc(clock12(toMin(s.end)))}</div></div></div><div class="actions"><button class="btn small ghost" data-shift-edit="${esc(s.id)}">Edit</button><button class="btn small ghost" data-shift-del="${esc(s.id)}" style="color:var(--red);">Delete</button></div></div>`; }).join("");
+  box.innerHTML = `
+    <div class="sp-head"><span class="chip warn">EDITING</span> ${me.role === "leader" ? `<span class="sub" style="margin-left:6px;">Editing</span> ${pill("support")} ${pill("sales")}` : `<span class="sub" style="margin-left:6px;">${esc(TEAM_NAME[team])} team</span>`}</div>
+    <div class="sub" style="margin:6px 0 12px;">${me.role === "leader" ? "You can edit both teams. " : ""}Everyone sees the result straight away; no emails are sent when a shift changes.</div>
+    <div class="actions" style="margin-bottom:14px;"><button class="btn small ghost" id="schCopyBtn">Copy last month</button><span class="msg" id="schPlanMsg"></span></div>
+    <div class="xb-label" style="margin-bottom:4px;">1. USUAL WEEK FOR ${esc(month.toUpperCase())}</div>
+    <div class="sub" style="margin-bottom:8px;">Set each person's usual shift for each weekday. It fills the whole month and saves as you change it. A new person starts on their first day.</div>
+    ${usual || '<div class="empty">Nobody on this team yet.</div>'}
+    ${roles}
+    <div class="xb-label" style="margin:22px 0 4px;">3. CHANGES FOR SPECIFIC DAYS</div>
+    <div class="sub" style="margin-bottom:8px;">Swaps, covers, a different time for one day. Holidays, approved PTO and Hero Shifts are added automatically.</div>
+    ${changes.length ? changes.map((c) => c.html).join("") : '<div class="sub">No changes this month.</div>'}
+    <div style="padding-top:10px;"><button class="btn small" id="schAddChangeBtn">+ Add a change</button></div>
+    <div class="xb-label" style="margin:22px 0 4px;">4. THE MONTH AT A GLANCE</div>
+    <div class="sub" style="margin-bottom:8px;">What everyone will see. Tap a day to change it. Orange outline: changed by a leader. Dark header: US holiday.</div>
+    ${gridHtml(team, dates, { clickable: true })}
+    <div class="xb-label" style="margin:22px 0 4px;">5. SHIFTS FOR ${esc(TEAM_NAME[team].toUpperCase())} (ARGENTINA TIME)</div>
+    <div class="sub" style="margin-bottom:8px;">Add, rename or change the hours of a shift. A new shift like 11-7 is one tap, no code change. Hero Shift (10-5) is added automatically on US holidays.</div>
+    ${shifts}
+    <div style="padding-top:10px;"><button class="btn small" id="schAddShiftBtn">+ Add a shift</button></div>`;
+}
+
+async function refreshScheduleAfterEdit() { await Promise.all(Object.keys(schData).map((ym) => loadScheduleMonth(ym, true))); renderSchedule(); }
+// Edits are saved one row at a time, a moment after the last change, so quick changes never overwrite each other.
+let schDirty = 0, schChain = Promise.resolve(), schErr = "";
+const schTimers = {};
+function schIdle() { return new Promise((res) => { const t = () => (schDirty > 0 ? setTimeout(t, 40) : res()); t(); }); }
+function schQueueRowSave(uid) {
+  if (!schTimers[uid]) schDirty++;
+  clearTimeout(schTimers[uid]);
+  setMsg($("schPlanMsg"), "Saving…", "");
+  schTimers[uid] = setTimeout(() => {
+    delete schTimers[uid];
+    schChain = schChain.then(async () => {
+      const row = document.querySelector(`#schPlanner [data-sp-uid="${uid}"]`);
+      if (!row) return;
+      const pattern = [...row.querySelectorAll("[data-sp-day]")].map((s) => s.value);
+      const { month, year } = ymParts(schMonth);
+      await api("scheduleSave", { userId: uid, month, year, pattern, fromDay: row.querySelector("[data-sp-from]").value || 1 });
+    }).catch((e) => { schErr = e.message; }).then(async () => {
+      schDirty--;
+      if (schDirty > 0) return;
+      try { await refreshScheduleAfterEdit(); } catch (e) { schErr = schErr || e.message; }
+      setMsg($("schPlanMsg"), schErr || "Saved.", schErr ? "error" : "ok");
+      schErr = "";
+    });
+  }, 350);
+}
+function changeForm(preset) {
+  const team = schEditTeam, T = schData[schMonth].teams[team];
+  openForm("Change one day", [
+    { id: "uid", label: "Person", type: "select", options: T.rows.map((r) => ({ value: r.userId, label: r.name })), value: preset.uid || (T.rows[0] && T.rows[0].userId) },
+    { id: "date", label: "Date", type: "date", value: preset.date || "" },
+    { id: "code", label: "Shift", type: "select", options: [{ value: "", label: "Off" }].concat(T.shifts.map((s) => ({ value: s.code, label: `${s.code} · ${s.name} ${hoursLabel(s.start, s.end)}` }))).concat([{ value: "CUS", label: "Custom hours (set below)" }]), value: preset.code === undefined ? "" : preset.code },
+    { id: "start", label: "Custom hours: from (Argentina time)", type: "time", value: "11:00" },
+    { id: "end", label: "Custom hours: until", type: "time", value: "19:00" },
+    { id: "note", label: "Note (optional)", type: "text", value: "" },
+  ], async (v) => {
+    await schIdle();
+    await api("scheduleChange", { userId: v.uid, date: v.date, code: v.code, start: v.start, end: v.end, note: v.note });
+    await refreshScheduleAfterEdit();
+  });
+}
+function shiftForm(s) {
+  openForm(s ? "Edit shift" : "Add a shift", [
+    { id: "code", label: "Short code (1 to 6 letters, numbers or dashes)", type: "text", value: s ? s.code : "" },
+    { id: "name", label: "Name", type: "text", value: s ? s.name : "" },
+    { id: "start", label: "From (Argentina time)", type: "time", value: s ? s.start : "09:00" },
+    { id: "end", label: "Until", type: "time", value: s ? s.end : "17:00" },
+  ], async (v) => {
+    await schIdle();
+    await api("shiftSave", Object.assign({ team: schEditTeam, code: v.code, name: v.name, start: v.start, end: v.end }, s ? { id: s.id } : {}));
+    await refreshScheduleAfterEdit();
+  });
+}
+
+$("schPlanner").addEventListener("change", (e) => {
+  const row = e.target.closest("[data-sp-uid]");
+  if (row && (e.target.matches("[data-sp-day]") || e.target.matches("[data-sp-from]"))) schQueueRowSave(row.dataset.spUid);
+});
+$("schPlanner").addEventListener("click", async (e) => {
+  const t = e.target;
+  if (t.closest("button, [data-sg-uid]")) await schIdle();
+  const et = t.closest("[data-sch-editteam]");
+  if (et) { schEditTeam = et.dataset.schEditteam; renderPlanner(); return; }
+  const rs = t.closest("[data-role-set]");
+  if (rs) {
+    const uid = rs.closest("[data-role-uid]").dataset.roleUid, T = schData[schMonth].teams[schEditTeam];
+    const r = T.rows.find((x) => x.userId === uid), wk = (T.shifts.find((s) => s.code === "WKD") || T.shifts[0]).code, p = r.pattern.slice();
+    p[5] = rs.dataset.roleSet === "sat" ? wk : ""; p[6] = rs.dataset.roleSet === "sun" ? wk : "";
+    const { month, year } = ymParts(schMonth);
+    try { await api("scheduleSave", { userId: uid, month, year, pattern: p, fromDay: r.fromDay }); await refreshScheduleAfterEdit(); } catch (err) { setMsg($("schPlanMsg"), err.message, "error"); }
+    return;
+  }
+  if (t.closest("#schRotateBtn")) {
+    const T = schData[schMonth].teams[schEditTeam], wk = (T.shifts.find((s) => s.code === "WKD") || T.shifts[0]).code, { month, year } = ymParts(schMonth);
+    const p0 = ymParts(schMonth), prevYm = p0.month === "January" ? `${p0.year - 1}-12` : ymFor(MONTHS[MONTHS.indexOf(p0.month) - 1], p0.year), prev = schData[prevYm];
+    const order = ["sat", "sun", "none"];
+    try {
+      for (const r of T.rows) {
+        const pr = prev ? prev.teams[schEditTeam].rows.find((x) => x.userId === r.userId) : null;
+        if (weekendRole(r.pattern) === "none" && !(pr && weekendRole(pr.pattern) !== "none")) continue;   // not in the rotation
+        const cur = weekendRole(r.pattern), next = order[(order.indexOf(cur === "both" ? "none" : cur) + 1) % 3], p = r.pattern.slice();
+        p[5] = next === "sat" ? wk : ""; p[6] = next === "sun" ? wk : "";
+        await api("scheduleSave", { userId: r.userId, month, year, pattern: p, fromDay: r.fromDay });
+      }
+      await refreshScheduleAfterEdit();
+    } catch (err) { setMsg($("schPlanMsg"), err.message, "error"); }
+    return;
+  }
+  if (t.closest("#schCopyBtn")) {
+    const { month, year } = ymParts(schMonth);
+    try { const r = await api("scheduleCopyMonth", { team: schEditTeam, month, year }); await refreshScheduleAfterEdit(); setMsg($("schPlanMsg"), `Copied ${r.copied} usual week${r.copied === 1 ? "" : "s"} from last month.`, "ok"); }
+    catch (err) { setMsg($("schPlanMsg"), err.message, "error"); }
+    return;
+  }
+  if (t.closest("#schAddChangeBtn")) { changeForm({}); return; }
+  const cell = t.closest("[data-sg-uid]");
+  if (cell) { changeForm({ uid: cell.dataset.sgUid, date: cell.dataset.sgDate, code: cell.dataset.sgCode }); return; }
+  const del = t.closest("[data-chg-del]");
+  if (del) { try { await api("scheduleChangeDelete", { id: del.dataset.chgDel }); await refreshScheduleAfterEdit(); } catch (err) { setMsg($("schPlanMsg"), err.message, "error"); } return; }
+  if (t.closest("#schAddShiftBtn")) { shiftForm(null); return; }
+  const se = t.closest("[data-shift-edit]");
+  if (se) { shiftForm(schData[schMonth].teams[schEditTeam].shifts.find((s) => s.id === se.dataset.shiftEdit)); return; }
+  const sd = t.closest("[data-shift-del]");
+  if (sd) {
+    if (!confirm("Delete this shift?")) return;
+    try { await api("shiftDelete", { id: sd.dataset.shiftDel }); await refreshScheduleAfterEdit(); } catch (err) { setMsg($("schPlanMsg"), err.message, "error"); }
+  }
+});
+
+// ---------- Schedule controls ----------
+$("schViewBar").addEventListener("click", (e) => { const b = e.target.closest("[data-schview]"); if (b) { schView = b.dataset.schview; if (schView === "month") schMonth = ymOf(schWeekStart || nowAr().date); loadScheduleView(); } });
+$("schTeamBar").addEventListener("click", (e) => { const b = e.target.closest("[data-schteam]"); if (b) { schTeams = b.dataset.schteam; renderSchedule(); } });
+$("schPrev").addEventListener("click", () => { if (schView === "week") schWeekStart = isoAdd(schWeekStart, -7); else { const p = ymParts(schMonth); schMonth = p.month === "January" ? `${p.year - 1}-12` : ymFor(MONTHS[MONTHS.indexOf(p.month) - 1], p.year); } loadScheduleView(); });
+$("schNext").addEventListener("click", () => { if (schView === "week") schWeekStart = isoAdd(schWeekStart, 7); else { const p = ymParts(schMonth); schMonth = p.month === "December" ? `${p.year + 1}-01` : ymFor(MONTHS[MONTHS.indexOf(p.month) + 1], p.year); } loadScheduleView(); });
+$("schEditBtn").addEventListener("click", () => {
+  schEditing = !schEditing;
+  if (schEditing) { if (schView === "week") schMonth = ymOf(schWeekStart); schView = "month"; if (me.role === "teamlead") schEditTeam = me.team; }
+  loadScheduleView();
+});
+
+// ---------- Export: print / PDF and Excel ----------
+function exportMonthYm() { return schView === "week" ? ymOf(schWeekStart) : schMonth; }
+function schExportDates(kind) { return kind === "week" ? weekDatesOf(schWeekStart) : monthDatesOf(exportMonthYm()); }
+function printScheduleHtml(dates) {
+  const title = schView === "week" ? `${shortDate(dates[0])} – ${shortDate(dates[6])}, ${dates[6].slice(0, 4)}` : `${ymParts(schMonth).month} ${ymParts(schMonth).year}`;
+  const tables = teamsShown().map((team) => {
+    const head = `<tr><th>${esc(TEAM_NAME[team])}</th>${dates.map((d) => `<th>${DOW3[dowIndex(d)]} ${Number(d.slice(8, 10))}${holidayOn(d) ? "<br>HOL" : ""}</th>`).join("")}</tr>`;
+    const body = rowsFor(team, dates).map((r) => `<tr><td>${esc(r.name)}</td>${dates.map((d) => `<td>${esc(cellText(cellAt(team, r.userId, d)))}</td>`).join("")}</tr>`).join("");
+    return `<table class="sch-print-table">${head}${body}</table>`;
+  }).join("");
+  const shifts = [];
+  teamsShown().forEach((team) => { const sc = schData[ymOf(dates[0])]; if (sc) sc.teams[team].shifts.forEach((s) => shifts.push(`${TEAM_NAME[team]} ${s.code}: ${hoursLabel(s.start, s.end)}`)); });
+  return `<div class="report-head"><p class="section-label" style="margin:0;">SCHEDULE — ${esc(title.toUpperCase())} (ARGENTINA TIME)</p></div>${tables}<p class="report-note">${esc(shifts.join(" · "))} · HERO 10-5 on US holidays · PTO = time off · HOL = US holiday · (home) = Home Office.</p>`;
+}
+$("schPrintBtn").addEventListener("click", () => {
+  const dates = schDates();
+  $("schPrintView").innerHTML = printScheduleHtml(dates);
+  const st = document.createElement("style"); st.id = "schPageStyle"; st.textContent = "@page { size: landscape; margin: 10mm; }"; document.head.appendChild(st);
+  printReport("schPrintView");
+});
+window.addEventListener("afterprint", () => { const st = $("schPageStyle"); if (st) st.remove(); });
+
+// A small .xlsx writer: stored (uncompressed) zip with inline strings; enough for Excel and Google Sheets.
+function crc32(bytes) {
+  let c, crc = 0xFFFFFFFF;
+  if (!crc32.table) { crc32.table = []; for (let n = 0; n < 256; n++) { c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; crc32.table[n] = c >>> 0; } }
+  for (let i = 0; i < bytes.length; i++) crc = crc32.table[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function zipStore(files) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  let offset = 0;
+  const u16 = (n) => [n & 255, (n >> 8) & 255], u32 = (n) => [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >>> 24) & 255];
+  files.forEach((f) => {
+    const name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+    const local = [0x50, 0x4B, 0x03, 0x04, ...u16(20), ...u16(0), ...u16(0), ...u16(0x21), ...u16(0), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0)];
+    parts.push(new Uint8Array(local), name, data);
+    central.push(new Uint8Array([0x50, 0x4B, 0x01, 0x02, ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset)]), name);
+    offset += local.length + name.length + data.length;
+  });
+  const cdSize = central.reduce((s, p) => s + p.length, 0);
+  const end = new Uint8Array([0x50, 0x4B, 0x05, 0x06, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(offset), ...u16(0)]);
+  return new Blob([...parts, ...central, end], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+const xmlEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function colName(i) { let s = ""; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+// sheets: [{ name, widths: [..], rows: [[{ v, fill, color, bold }|string, ...]] }]
+function buildXlsx(sheets) {
+  const styleKeys = ["||0"];            // fill|color|bold
+  const styleIdx = (c) => { const k = `${c.fill || ""}|${c.color || ""}|${c.bold ? 1 : 0}`; let i = styleKeys.indexOf(k); if (i < 0) { styleKeys.push(k); i = styleKeys.length - 1; } return i; };
+  const sheetXml = sheets.map((sh) => {
+    const rows = sh.rows.map((r, ri) => `<row r="${ri + 1}">${r.map((c, ci) => {
+      const cell = typeof c === "object" && c !== null ? c : { v: c };
+      if (cell.v === "" || cell.v === undefined || cell.v === null) { return cell.fill ? `<c r="${colName(ci)}${ri + 1}" s="${styleIdx(cell)}"/>` : ""; }
+      const s = cell.fill || cell.color || cell.bold ? ` s="${styleIdx(cell)}"` : "";
+      return typeof cell.v === "number" ? `<c r="${colName(ci)}${ri + 1}"${s}><v>${cell.v}</v></c>` : `<c r="${colName(ci)}${ri + 1}"${s} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(cell.v)}</t></is></c>`;
+    }).join("")}</row>`).join("");
+    const cols = sh.widths ? `<cols>${sh.widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols>` : "";
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane xSplit="1" ySplit="1" topLeftCell="B2" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>${cols}<sheetData>${rows}</sheetData></worksheet>`;
+  });
+  const fills = [], fonts = ['<font><sz val="11"/><name val="Calibri"/></font>'];
+  const xfs = styleKeys.map((k) => {
+    const [fill, color, bold] = k.split("|");
+    let fillId = 0, fontId = 0;
+    if (fill) { fills.push(`<fill><patternFill patternType="solid"><fgColor rgb="FF${fill}"/><bgColor indexed="64"/></patternFill></fill>`); fillId = fills.length + 1; }
+    if (color || bold === "1") { fonts.push(`<font>${bold === "1" ? "<b/>" : ""}<sz val="11"/>${color ? `<color rgb="FF${color}"/>` : ""}<name val="Calibri"/></font>`); fontId = fonts.length - 1; }
+    return `<xf numFmtId="0" fontId="${fontId}" fillId="${fillId}" borderId="0" xfId="0"${fillId ? ' applyFill="1"' : ""}${fontId ? ' applyFont="1"' : ""}/>`;
+  });
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="${fonts.length}">${fonts.join("")}</fonts><fills count="${fills.length + 2}"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fills.join("")}</fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join("")}</cellXfs></styleSheet>`;
+  const files = [
+    { name: "[Content_Types].xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}</Types>` },
+    { name: "_rels/.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name: "xl/workbook.xml", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${xmlEsc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join("")}</sheets></workbook>` },
+    { name: "xl/_rels/workbook.xml.rels", data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join("")}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+    { name: "xl/styles.xml", data: styles },
+  ].concat(sheetXml.map((x, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, data: x })));
+  return zipStore(files);
+}
+function downloadBlob(blob, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+async function exportSchedule(kind) {
+  schInit();
+  const dates = schExportDates(kind);
+  await Promise.all([...new Set(dates.map(ymOf))].map((ym) => loadScheduleMonth(ym)));
+  const hex = (c) => c.replace("#", "").toUpperCase();
+  const sheets = teamsShown().map((team) => {
+    const head = [{ v: TEAM_NAME[team], bold: true, fill: "D5D8DD" }].concat(dates.map((d) => ({ v: `${DOW3[dowIndex(d)]} ${shortDate(d).slice(4)}${holidayOn(d) ? " (holiday)" : ""}`, bold: true, fill: holidayOn(d) ? "4A4A4A" : "D5D8DD", color: holidayOn(d) ? "FFFFFF" : undefined })));
+    const body = rowsFor(team, dates).map((r) => [{ v: r.name, bold: true }].concat(dates.map((d) => {
+      const c = cellAt(team, r.userId, d) || OFFCELL, [bg, fg] = cellColors(c);
+      return { v: cellText(c), fill: c.k === "off" ? undefined : hex(bg), color: c.k === "off" ? undefined : hex(fg) };
+    })));
+    return { name: TEAM_NAME[team], widths: [22].concat(dates.map(() => 13)), rows: [head].concat(body) };
+  });
+  const legend = [[{ v: "Team", bold: true, fill: "D5D8DD" }, { v: "Shift", bold: true, fill: "D5D8DD" }, { v: "Name", bold: true, fill: "D5D8DD" }, { v: "Hours (Argentina time)", bold: true, fill: "D5D8DD" }]];
+  teamsShown().forEach((team) => { const sc = schData[ymOf(dates[0])]; if (sc) sc.teams[team].shifts.forEach((s) => legend.push([TEAM_NAME[team], s.code, s.name, `${s.start}-${s.end}`])); });
+  legend.push(["Both", "HERO", "Hero Shift (US holiday cover)", "10:00-17:00"], ["Both", "PTO", "Approved time off", ""], ["Both", "HOL", "US holiday, off", ""], ["Both", "(home)", "Home Office day", ""]);
+  sheets.push({ name: "Shifts", widths: [10, 10, 34, 24], rows: legend });
+  const name = kind === "week" ? `Schedule_${dates[0]}_week.xlsx` : `Schedule_${exportMonthYm()}.xlsx`;
+  downloadBlob(buildXlsx(sheets), name);
+}
+$("schXlsWeekBtn").addEventListener("click", () => exportSchedule(schView === "week" ? "week" : "month"));
+$("schXlsMonthBtn").addEventListener("click", () => exportSchedule("month"));
+
 // ---------- Backend status + email test (leaders) ----------
-function backendOk() { return backend.version !== undefined && backend.version >= 5; }
+function backendOk() { return backend.version !== undefined && backend.version >= 7; }
 function needBackend() {
   if (backendOk()) return true;
   alert("The backend is out of date. Paste the newest Code.gs into Apps Script, run authorize and setup, then Deploy > Manage deployments > New version. The Team tab explains it.");
@@ -1675,7 +2790,7 @@ function needBackend() {
 }
 function renderBackendStatus() {
   const el = $("backendStatus"), bkEl = $("backupStatus");
-  if (!isLeader) { el.innerHTML = ""; bkEl.innerHTML = ""; return; }
+  if (!isAdmin) { el.innerHTML = ""; bkEl.innerHTML = ""; return; }
   if (!backendOk()) {
     el.innerHTML = "<strong>Your backend is out of date.</strong> Paste the newest Code.gs into Apps Script, run <em>authorize</em> and <em>setup</em>, then Deploy > Manage deployments > pencil > New version > Deploy.";
     el.style.color = "var(--red)";
@@ -1738,7 +2853,7 @@ $("formSaveBtn").addEventListener("click", () => withBtn($("formSaveBtn"), async
 }));
 
 // ---------- Summary (leaders): one card per person; Manage opens everything about them ----------
-const STATUS_OPTS = [{ value: "approved", label: "Approved" }, { value: "pending", label: "Pending" }, { value: "denied", label: "Not approved" }];
+const STATUS_OPTS = [{ value: "approved", label: "Approved" }, { value: "pending", label: "Pending" }, { value: "denied", label: "Not approved" }, { value: "cancelled", label: "Cancelled" }];
 const byName = (a, b) => (a.name || a.email).localeCompare(b.name || b.email);
 const monthIndex = (m) => MONTHS.indexOf(m);
 function sumYear() { return parseInt($("smYear").value, 10) || new Date().getFullYear(); }
@@ -1754,7 +2869,7 @@ function balanceLine(u, kind, year) {
 }
 function heroList(uid, year) {
   return requests
-    .filter((r) => r.requesterId === uid && r.kind === "holiday_work" && r.status !== "denied" && String(r.holidayDate).startsWith(String(year)))
+    .filter((r) => r.requesterId === uid && r.kind === "holiday_work" && r.status !== "denied" && r.status !== "cancelled" && String(r.holidayDate).startsWith(String(year)))
     .sort((a, b) => String(a.holidayDate).localeCompare(String(b.holidayDate)));
 }
 
@@ -1771,7 +2886,7 @@ function renderSummary() {
   detail.classList.add("hidden");
   listView.classList.remove("hidden");
   const month = $("smMonth").value, year = sumYear();
-  const members = users.filter((u) => u.active === "yes").sort(byName);
+  const members = users.filter((u) => u.active === "yes" && inView(u.team)).sort(byName);
   $("sumList").innerHTML = members.map((u) => {
     const ex = extrasFor(u.id, month, year);
     const t = extrasTotals(ex);
@@ -1801,7 +2916,8 @@ function reqCardHtml(r) {
   const detail = isHero ? esc(fmtDate(r.holidayDate)) : `${esc(datesText(r))} · ${esc(daysLabel(r))}`;
   return `<div class="card-row">
     <div class="top-line"><span class="title">${typeLabelOf(r)}</span>${badgeHtml(r.status)}</div>
-    <div class="sub">${detail}</div>
+    <div class="sub">${detail}${selfApproved(r) ? " · approved by themselves" : ""}</div>
+    ${r.changeStatus ? `<div class="sub" style="color:var(--red);">${r.changeStatus === "cancel" ? "Cancellation" : "Change"} requested: ${esc((r.changeStatus === "change" ? datesText({ startDate: r.changeStart, endDate: r.changeEnd }) + " · " : "") + r.changeReason)}</div>` : ""}
     ${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}
     <div class="actions"><button class="btn small ghost" data-edit-req="${esc(r.id)}">Edit</button><button class="btn small ghost" data-del-req="${esc(r.id)}">Delete</button></div>
   </div>`;
@@ -1988,7 +3104,7 @@ function renderOffice() {
   $("officeCowork").innerHTML = cow ? `<p class="section-label">COWORKING</p>${cow}` : "";
   const entries = [[L.handbookUrl, "Policies Handbook"], [L.websiteUrl, "Urban Furnished"]];
   const shown = entries.map(([url, text]) =>
-    url ? `<div class="sub">${linkHtml(url, text)}</div>` : (isLeader ? `<div class="sub" style="color:var(--muted);">${esc(text)}: not set yet (use Edit)</div>` : "")).join("");
+    url ? `<div class="sub">${linkHtml(url, text)}</div>` : (isAdmin ? `<div class="sub" style="color:var(--muted);">${esc(text)}: not set yet (use Edit)</div>` : "")).join("");
   $("officeLinks").innerHTML = shown.trim() ? `<p class="section-label">LINKS</p><div class="card-row">${shown}</div>` : "";
   $("officeContent").textContent = officeText || "Nothing here yet.";
   $("officeTextarea").value = officeText;
