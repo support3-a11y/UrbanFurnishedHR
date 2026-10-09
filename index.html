@@ -244,6 +244,13 @@
   .sch-planner .sub, .sch-today-card .sub { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
   .sch-planner .sub { margin-bottom: 4px; }
   .sp-name .sg-note { margin-left: 8px; }
+  .sp-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .sp-save { display: flex; align-items: center; gap: 8px; }
+  .sp-status { font-size: 12px; color: var(--muted); }
+  .sp-status.warn { color: #8A5A00; font-weight: 600; }
+  .sp-status.ok { color: #1E6B45; font-weight: 600; }
+  .sp-status.err { color: var(--red); }
+  .sp-row.sp-dirty { background: #FFFBF0; }
   .sp-chg .sub { margin: 2px 0 0; }
   .sch-print-table { border-collapse: collapse; width: 100%; margin-bottom: 14px; font-size: 11px; }
   .sch-print-table th, .sch-print-table td { border: 1px solid #999; padding: 4px 5px; text-align: center; }
@@ -771,7 +778,7 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
@@ -2490,34 +2497,50 @@ function renderSchedule() {
 }
 
 // ---------- Planner (leaders) ----------
-function planTeamUsers(team) { const sc = schData[schMonth]; return sc ? sc.teams[team].rows : []; }
-function weekendRole(pattern) { const sat = !!pattern[5], sun = !!pattern[6]; return sat && !sun ? "sat" : sun && !sat ? "sun" : !sat && !sun ? "none" : "both"; }
+let formNoSync = false;
+function prevYmOf(ym) { const p = ymParts(ym); return p.month === "January" ? `${p.year - 1}-12` : ymFor(MONTHS[MONTHS.indexOf(p.month) - 1], p.year); }
+
+// Unsaved edits in a person's usual week survive a redraw (for example after adding a change for someone else).
+function markDirty(row) {
+  row.classList.add("sp-dirty");
+  const st = row.querySelector(".sp-status");
+  st.textContent = "Not saved yet"; st.className = "sp-status warn";
+}
+function captureUnsaved() {
+  const out = {};
+  document.querySelectorAll("#schPlanner .sp-row.sp-dirty").forEach((row) => {
+    out[row.dataset.spUid] = { pattern: [...row.querySelectorAll("[data-sp-day]")].map((s) => s.value), from: row.querySelector("[data-sp-from]").value };
+  });
+  return out;
+}
+function restoreUnsaved(saved) {
+  Object.keys(saved).forEach((uid) => {
+    const row = document.querySelector(`#schPlanner [data-sp-uid="${uid}"]`);
+    if (!row) return;
+    row.querySelectorAll("[data-sp-day]").forEach((s, i) => { s.value = saved[uid].pattern[i]; });
+    row.querySelector("[data-sp-from]").value = saved[uid].from;
+    markDirty(row);
+  });
+}
 
 function renderPlanner() {
-  if (schDirty > 0) return;   // unsaved edits in the planner: do not redraw over them
   const box = $("schPlanner");
   if (!schEditing || !me || !(me.role === "leader" || me.role === "teamlead")) { box.classList.add("hidden"); return; }
   const team = schEditTeam, sc = schData[schMonth];
   if (!sc) { box.classList.add("hidden"); return; }
+  const unsaved = captureUnsaved();
   box.classList.remove("hidden");
-  const T = sc.teams[team], { month, year } = ymParts(schMonth), dates = monthDatesOf(schMonth);
+  const T = sc.teams[team], { month } = ymParts(schMonth), dates = monthDatesOf(schMonth);
   const shiftOpts = (sel) => `<option value="">—</option>` + T.shifts.map((s) => `<option value="${esc(s.code)}"${s.code === sel ? " selected" : ""}>${esc(s.code)}</option>`).join("");
   const pill = (t) => `<button class="repkind${t === team ? " active" : ""}" data-sch-editteam="${t}">${TEAM_NAME[t]}</button>`;
   const usual = T.rows.map((r) => `<div class="sp-row" data-sp-uid="${esc(r.userId)}">
-      <div class="sp-name">${esc(r.name)}${r.planned ? "" : '<span class="sg-note">not planned</span>'}</div>
+      <div class="sp-top">
+        <div class="sp-name">${esc(r.name)}${r.planned ? "" : '<span class="sg-note">not planned</span>'}</div>
+        <div class="sp-save"><span class="sp-status"></span><button class="btn small" data-sp-save="${esc(r.userId)}">Save</button></div>
+      </div>
       <div class="sp-sels">${DOW3.map((d, i) => `<label class="sp-sel"><span>${d}</span><select data-sp-day="${i}" aria-label="${esc(r.name)} ${d}">${shiftOpts(r.pattern[i])}</select></label>`).join("")}</div>
       <label class="sp-from"><span>starts on day</span><input type="number" min="1" max="31" value="${r.fromDay}" data-sp-from aria-label="${esc(r.name)} starts on day"></label>
     </div>`).join("");
-  const wk = T.shifts.find((s) => s.code === "WKD") || T.shifts[0];
-  const prev = schData[(() => { const p = ymParts(schMonth); return p.month === "January" ? `${p.year - 1}-12` : ymFor(MONTHS[MONTHS.indexOf(p.month) - 1], p.year); })()];
-  const inRotation = (r) => {
-    const pr = prev ? prev.teams[team].rows.find((x) => x.userId === r.userId) : null;
-    return weekendRole(r.pattern) !== "none" || (pr && weekendRole(pr.pattern) !== "none");
-  };
-  const roles = team === "support" ? `<div class="xb-label" style="margin:22px 0 4px;">2. WEEKEND ROLES (SUPPORT)</div>
-    <div class="sub" style="margin-bottom:8px;">Fixed for the whole month. Every Saturday or Sunday follows the role, with the ${esc(wk ? wk.name : "weekend")} shift.</div>
-    ${T.rows.map((r) => { const cur = weekendRole(r.pattern); return `<div class="sp-role" data-role-uid="${esc(r.userId)}"><div class="sp-name">${esc(r.name)}${inRotation(r) ? "" : '<span class="sg-note">not in rotation</span>'}</div><div class="sp-seg">${[["sat", "Saturday"], ["sun", "Sunday"], ["none", "None"]].map(([k, l]) => `<button class="${cur === k ? "on" : ""}" data-role-set="${k}">${l}</button>`).join("")}</div></div>`; }).join("")}
-    <div class="actions" style="margin-top:8px;"><button class="btn small ghost" id="schRotateBtn">Rotate roles</button><span class="sub">Moves each person in the rotation to the next role (Saturday, Sunday, none). You can still change any of them.</span></div>` : "";
   const mine = new Set(T.rows.map((r) => r.userId));
   const manual = sc.changes.filter((c) => mine.has(c.userId)).sort((a, b) => a.date.localeCompare(b.date));
   const nameById = {}; T.rows.forEach((r) => { nameById[r.userId] = r.name; });
@@ -2536,50 +2559,49 @@ function renderPlanner() {
   const shifts = T.shifts.map((s) => { const [bg, fg] = cellColors({ k: "shift", c: s.code }); return `<div class="sp-chg"><div class="sp-shift"><span class="sch-code" style="background:${bg};color:${fg};">${esc(s.code)}</span><div><div class="sp-chg-t">${esc(s.name)}</div><div class="sub">${esc(clock12(toMin(s.start)))} – ${esc(clock12(toMin(s.end)))}</div></div></div><div class="actions"><button class="btn small ghost" data-shift-edit="${esc(s.id)}">Edit</button><button class="btn small ghost" data-shift-del="${esc(s.id)}" style="color:var(--red);">Delete</button></div></div>`; }).join("");
   box.innerHTML = `
     <div class="sp-head"><span class="chip warn">EDITING</span> ${me.role === "leader" ? `<span class="sub" style="margin-left:6px;">Editing</span> ${pill("support")} ${pill("sales")}` : `<span class="sub" style="margin-left:6px;">${esc(TEAM_NAME[team])} team</span>`}</div>
-    <div class="sub" style="margin:6px 0 12px;">${me.role === "leader" ? "You can edit both teams. " : ""}Everyone sees the result straight away; no emails are sent when a shift changes.</div>
+    <div class="sub" style="margin:6px 0 12px;">${me.role === "leader" ? "You can edit both teams. " : ""}Everyone sees what you save straight away; no emails are sent when a shift changes.</div>
     <div class="actions" style="margin-bottom:14px;"><button class="btn small ghost" id="schCopyBtn">Copy last month</button><span class="msg" id="schPlanMsg"></span></div>
     <div class="xb-label" style="margin-bottom:4px;">1. USUAL WEEK FOR ${esc(month.toUpperCase())}</div>
-    <div class="sub" style="margin-bottom:8px;">Set each person's usual shift for each weekday. It fills the whole month and saves as you change it. A new person starts on their first day.</div>
+    <div class="sub" style="margin-bottom:8px;">Choose each person's shift for each weekday, Saturday and Sunday included, then press that person's Save. It fills the whole month. A new person starts on their first day.</div>
     ${usual || '<div class="empty">Nobody on this team yet.</div>'}
-    ${roles}
-    <div class="xb-label" style="margin:22px 0 4px;">3. CHANGES FOR SPECIFIC DAYS</div>
+    <div class="xb-label" style="margin:22px 0 4px;">2. CHANGES FOR SPECIFIC DAYS</div>
     <div class="sub" style="margin-bottom:8px;">Swaps, covers, a different time for one day. Holidays, approved PTO and Hero Shifts are added automatically.</div>
     ${changes.length ? changes.map((c) => c.html).join("") : '<div class="sub">No changes this month.</div>'}
     <div style="padding-top:10px;"><button class="btn small" id="schAddChangeBtn">+ Add a change</button></div>
-    <div class="xb-label" style="margin:22px 0 4px;">4. THE MONTH AT A GLANCE</div>
+    <div class="xb-label" style="margin:22px 0 4px;">3. THE MONTH AT A GLANCE</div>
     <div class="sub" style="margin-bottom:8px;">What everyone will see. Tap a day to change it. Orange outline: changed by a leader. Dark header: US holiday.</div>
     ${gridHtml(team, dates, { clickable: true })}
-    <div class="xb-label" style="margin:22px 0 4px;">5. SHIFTS FOR ${esc(TEAM_NAME[team].toUpperCase())} (ARGENTINA TIME)</div>
+    <div class="xb-label" style="margin:22px 0 4px;">4. SHIFTS FOR ${esc(TEAM_NAME[team].toUpperCase())} (ARGENTINA TIME)</div>
     <div class="sub" style="margin-bottom:8px;">Add, rename or change the hours of a shift. A new shift like 11-7 is one tap, no code change. Hero Shift (10-5) is added automatically on US holidays.</div>
     ${shifts}
     <div style="padding-top:10px;"><button class="btn small" id="schAddShiftBtn">+ Add a shift</button></div>`;
+  restoreUnsaved(unsaved);
 }
 
-async function refreshScheduleAfterEdit() { await Promise.all(Object.keys(schData).map((ym) => loadScheduleMonth(ym, true))); renderSchedule(); }
-// Edits are saved one row at a time, a moment after the last change, so quick changes never overwrite each other.
-let schDirty = 0, schChain = Promise.resolve(), schErr = "";
-const schTimers = {};
-function schIdle() { return new Promise((res) => { const t = () => (schDirty > 0 ? setTimeout(t, 40) : res()); t(); }); }
-function schQueueRowSave(uid) {
-  if (!schTimers[uid]) schDirty++;
-  clearTimeout(schTimers[uid]);
-  setMsg($("schPlanMsg"), "Saving…", "");
-  schTimers[uid] = setTimeout(() => {
-    delete schTimers[uid];
-    schChain = schChain.then(async () => {
-      const row = document.querySelector(`#schPlanner [data-sp-uid="${uid}"]`);
-      if (!row) return;
-      const pattern = [...row.querySelectorAll("[data-sp-day]")].map((s) => s.value);
-      const { month, year } = ymParts(schMonth);
-      await api("scheduleSave", { userId: uid, month, year, pattern, fromDay: row.querySelector("[data-sp-from]").value || 1 });
-    }).catch((e) => { schErr = e.message; }).then(async () => {
-      schDirty--;
-      if (schDirty > 0) return;
-      try { await refreshScheduleAfterEdit(); } catch (e) { schErr = schErr || e.message; }
-      setMsg($("schPlanMsg"), schErr || "Saved.", schErr ? "error" : "ok");
-      schErr = "";
-    });
-  }, 350);
+// After an edit, reload only the months that changed (plus the current one for the Today card).
+async function refreshScheduleAfterEdit(yms) {
+  const need = new Set([schMonth, ymOf(nowAr().date)].concat(yms || []));
+  await Promise.all([...need].map((ym) => loadScheduleMonth(ym, true)));
+  Object.keys(schData).forEach((ym) => { if (!need.has(ym)) delete schData[ym]; });   // other months reload when opened
+  renderSchedule();
+}
+async function schSaveRow(uid, btn) {
+  const row = document.querySelector(`#schPlanner [data-sp-uid="${uid}"]`);
+  if (!row) return;
+  const status = row.querySelector(".sp-status");
+  const pattern = [...row.querySelectorAll("[data-sp-day]")].map((s) => s.value);
+  const fromDay = row.querySelector("[data-sp-from]").value || 1;
+  const { month, year } = ymParts(schMonth);
+  status.textContent = "Saving…"; status.className = "sp-status";
+  await withBtn(btn, async () => {
+    try {
+      await api("scheduleSave", { userId: uid, month, year, pattern, fromDay });
+      row.classList.remove("sp-dirty");
+      await refreshScheduleAfterEdit();
+      const again = document.querySelector(`#schPlanner [data-sp-uid="${uid}"] .sp-status`);
+      if (again) { again.textContent = "Saved ✓"; again.className = "sp-status ok"; }
+    } catch (e) { status.textContent = e.message; status.className = "sp-status err"; }
+  });
 }
 function changeForm(preset) {
   const team = schEditTeam, T = schData[schMonth].teams[team];
@@ -2591,10 +2613,10 @@ function changeForm(preset) {
     { id: "end", label: "Custom hours: until", type: "time", value: "19:00" },
     { id: "note", label: "Note (optional)", type: "text", value: "" },
   ], async (v) => {
-    await schIdle();
     await api("scheduleChange", { userId: v.uid, date: v.date, code: v.code, start: v.start, end: v.end, note: v.note });
-    await refreshScheduleAfterEdit();
+    await refreshScheduleAfterEdit([ymOf(v.date)]);
   });
+  formNoSync = true;
 }
 function shiftForm(s) {
   openForm(s ? "Edit shift" : "Add a shift", [
@@ -2603,46 +2625,22 @@ function shiftForm(s) {
     { id: "start", label: "From (Argentina time)", type: "time", value: s ? s.start : "09:00" },
     { id: "end", label: "Until", type: "time", value: s ? s.end : "17:00" },
   ], async (v) => {
-    await schIdle();
     await api("shiftSave", Object.assign({ team: schEditTeam, code: v.code, name: v.name, start: v.start, end: v.end }, s ? { id: s.id } : {}));
     await refreshScheduleAfterEdit();
   });
+  formNoSync = true;
 }
 
 $("schPlanner").addEventListener("change", (e) => {
   const row = e.target.closest("[data-sp-uid]");
-  if (row && (e.target.matches("[data-sp-day]") || e.target.matches("[data-sp-from]"))) schQueueRowSave(row.dataset.spUid);
+  if (row && (e.target.matches("[data-sp-day]") || e.target.matches("[data-sp-from]"))) markDirty(row);
 });
 $("schPlanner").addEventListener("click", async (e) => {
   const t = e.target;
-  if (t.closest("button, [data-sg-uid]")) await schIdle();
   const et = t.closest("[data-sch-editteam]");
   if (et) { schEditTeam = et.dataset.schEditteam; renderPlanner(); return; }
-  const rs = t.closest("[data-role-set]");
-  if (rs) {
-    const uid = rs.closest("[data-role-uid]").dataset.roleUid, T = schData[schMonth].teams[schEditTeam];
-    const r = T.rows.find((x) => x.userId === uid), wk = (T.shifts.find((s) => s.code === "WKD") || T.shifts[0]).code, p = r.pattern.slice();
-    p[5] = rs.dataset.roleSet === "sat" ? wk : ""; p[6] = rs.dataset.roleSet === "sun" ? wk : "";
-    const { month, year } = ymParts(schMonth);
-    try { await api("scheduleSave", { userId: uid, month, year, pattern: p, fromDay: r.fromDay }); await refreshScheduleAfterEdit(); } catch (err) { setMsg($("schPlanMsg"), err.message, "error"); }
-    return;
-  }
-  if (t.closest("#schRotateBtn")) {
-    const T = schData[schMonth].teams[schEditTeam], wk = (T.shifts.find((s) => s.code === "WKD") || T.shifts[0]).code, { month, year } = ymParts(schMonth);
-    const p0 = ymParts(schMonth), prevYm = p0.month === "January" ? `${p0.year - 1}-12` : ymFor(MONTHS[MONTHS.indexOf(p0.month) - 1], p0.year), prev = schData[prevYm];
-    const order = ["sat", "sun", "none"];
-    try {
-      for (const r of T.rows) {
-        const pr = prev ? prev.teams[schEditTeam].rows.find((x) => x.userId === r.userId) : null;
-        if (weekendRole(r.pattern) === "none" && !(pr && weekendRole(pr.pattern) !== "none")) continue;   // not in the rotation
-        const cur = weekendRole(r.pattern), next = order[(order.indexOf(cur === "both" ? "none" : cur) + 1) % 3], p = r.pattern.slice();
-        p[5] = next === "sat" ? wk : ""; p[6] = next === "sun" ? wk : "";
-        await api("scheduleSave", { userId: r.userId, month, year, pattern: p, fromDay: r.fromDay });
-      }
-      await refreshScheduleAfterEdit();
-    } catch (err) { setMsg($("schPlanMsg"), err.message, "error"); }
-    return;
-  }
+  const sv = t.closest("[data-sp-save]");
+  if (sv) { schSaveRow(sv.dataset.spSave, sv); return; }
   if (t.closest("#schCopyBtn")) {
     const { month, year } = ymParts(schMonth);
     try { const r = await api("scheduleCopyMonth", { team: schEditTeam, month, year }); await refreshScheduleAfterEdit(); setMsg($("schPlanMsg"), `Copied ${r.copied} usual week${r.copied === 1 ? "" : "s"} from last month.`, "ok"); }
@@ -2825,6 +2823,7 @@ $("testMailBtn").addEventListener("click", () => withBtn($("testMailBtn"), async
 
 // ---------- generic edit form (used by Manage) ----------
 function openForm(title, fields, onSave) {
+  formNoSync = false;
   formFields = fields;
   formHandler = onSave;
   $("formTitle").textContent = title;
@@ -2848,7 +2847,8 @@ $("formSaveBtn").addEventListener("click", () => withBtn($("formSaveBtn"), async
   try {
     await formHandler(vals);
     $("formModal").classList.add("hidden");
-    await sync(true);
+    if (!formNoSync) await sync(true);
+    formNoSync = false;
   } catch (e) { setMsg($("formMsg"), e.message, "error"); }
 }));
 
