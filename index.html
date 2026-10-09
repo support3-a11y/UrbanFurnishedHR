@@ -778,7 +778,7 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
@@ -2595,11 +2595,16 @@ async function schSaveRow(uid, btn) {
   status.textContent = "Saving…"; status.className = "sp-status";
   await withBtn(btn, async () => {
     try {
-      await api("scheduleSave", { userId: uid, month, year, pattern, fromDay });
+      const res = await api("scheduleSave", { userId: uid, month, year, pattern, fromDay });
       row.classList.remove("sp-dirty");
       await refreshScheduleAfterEdit();
       const again = document.querySelector(`#schPlanner [data-sp-uid="${uid}"] .sp-status`);
-      if (again) { again.textContent = "Saved ✓"; again.className = "sp-status ok"; }
+      const sc = schData[schMonth], mine = sc && sc.teams[schEditTeam].rows.find((r) => r.userId === uid);
+      if (again && mine && mine.planned) { again.textContent = "Saved ✓"; again.className = "sp-status ok"; }
+      else if (again) {
+        again.textContent = `Saved, but the schedule did not pick it up. The Sheet holds: ${(res.stored || []).join(", ") || "nothing"} (looking for ${schMonth}). Please send this message to Claude.`;
+        again.className = "sp-status err";
+      }
     } catch (e) { status.textContent = e.message; status.className = "sp-status err"; }
   });
 }
@@ -2780,7 +2785,7 @@ $("schXlsWeekBtn").addEventListener("click", () => exportSchedule(schView === "w
 $("schXlsMonthBtn").addEventListener("click", () => exportSchedule("month"));
 
 // ---------- Backend status + email test (leaders) ----------
-function backendOk() { return backend.version !== undefined && backend.version >= 7; }
+function backendOk() { return backend.version !== undefined && backend.version >= 8; }
 function needBackend() {
   if (backendOk()) return true;
   alert("The backend is out of date. Paste the newest Code.gs into Apps Script, run authorize and setup, then Deploy > Manage deployments > New version. The Team tab explains it.");
