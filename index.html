@@ -273,6 +273,9 @@
   .py-clean-result { border-top: 1px solid var(--rule); margin-top: 12px; padding-top: 10px; }
   .py-clean-result .sub { font-size: 12px; color: #4A4A4A; margin-top: 4px; }
   .py-clean-line { font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600; }
+  .py-status { font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 8px; }
+  .py-status.ok { color: #1E6B45; }
+  .py-status.err { color: var(--red); }
 </style>
 </head>
 <body>
@@ -796,7 +799,7 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
@@ -2157,7 +2160,7 @@ function pyCardEdit(p, P) {
     <div class="field-row" style="margin-top:12px;"><label for="bn_${uid}">Bonus note (optional)</label><input type="text" id="bn_${uid}" data-uid="${uid}" data-f="bonusNote" value="${esc(p.bonusNote)}"></div>
     ${reimb}
     <div class="actions" style="margin-top:12px;">
-      <button class="btn small" data-save="${uid}">Save</button>
+      <button class="btn small" data-save="${uid}">Save</button><span class="py-status" data-status="${uid}"></span>
       ${p.edited ? `<button class="btn small ghost" data-reset="${uid}">Reset to logged</button>` : ""}
     </div>
   </div>`;
@@ -2257,7 +2260,7 @@ function fillPayrollSection(team) {
             <div class="sub" data-clean-detail>${esc(cleaningDetail(cl, P.salesCount))}</div>
             <div class="sub">The total starts as what Sales logged in Log Extras. Everyone in Sales gets the same amount, whatever days they worked.</div>
           </div>
-          <div class="actions" style="margin-top:10px;"><button class="btn small" data-clean-save>Save</button><button class="btn small ghost" data-clean-reset>Back to standard values</button></div>
+          <div class="actions" style="margin-top:10px;"><button class="btn small" data-clean-save>Save</button><button class="btn small ghost" data-clean-reset>Back to standard values</button><span class="py-status" data-clean-status></span></div>
         </div>`;
   }
   q(".py-cards").innerHTML = people.length ? people.map((p) => (confirmed ? pyCardView(p) : pyCardEdit(p, P))).join("") : '<p class="empty">Nobody on this team yet.</p>';
@@ -2319,6 +2322,11 @@ function recalcPayroll(team) {
   set(".py-bar-value", fmtMoney(round2(sum)));
 }
 
+const PY_NOT_KEPT = "The Sheet did not keep this change. In Apps Script run setup once (select setup, press Run), then try again.";
+function pyStatus(sel, team, text, ok) {
+  const sec = pySection(team), el = sec && sec.querySelector(sel);
+  if (el) { el.textContent = text; el.className = "py-status " + (ok ? "ok" : "err"); }
+}
 async function pySave(team, uid, btn) {
   const P = payrolls[team], sec = pySection(team);
   const p = P.people.find((x) => x.userId === uid);
@@ -2347,8 +2355,11 @@ async function pySave(team, uid, btn) {
       nums.cleaningSold = p.fin.cleaningSold;      // not edited here: the Sales total comes from what Sales logged
       const note = get("bonusNote") || "";
       const changed = ["extraDays", "hours10", "hours15", "heroShift"].some((k) => nums[k] !== p.fin[k]) || nums.bonus !== p.bonus || note !== p.bonusNote || daysWorked !== p.daysWorked;
-      if (changed) await api("setPayroll", Object.assign({ userId: uid, month, year, bonusNote: note, daysWorked }, nums));
+      let kept = true;
+      if (changed) { const res = await api("setPayroll", Object.assign({ userId: uid, month, year, bonusNote: note, daysWorked }, nums)); kept = res.verified !== false; }
       await loadPayroll();
+      pyStatus(`[data-status="${uid}"]`, team, kept ? (changed ? "Saved ✓" : "No changes to save") : "Not saved", kept);
+      if (!kept) alert(PY_NOT_KEPT);
     } catch (e) { alert(e.message); }
   });
 }
@@ -2383,9 +2394,21 @@ $("pyTeams").addEventListener("click", (e) => {
   if (cs) withBtn(cs, async () => {
     const std = cleaningOf(payrolls[team]).standard;
     const read = (k, standard) => { const v = sec.querySelector(`[data-clean="${k}"]`).value.trim(); return v === "" || Number(v) === standard ? "" : v; };   // equal to the standard = keep following it
-    try { await api("setCleaning", { team, month, year, total: read("total", std.total), percent: read("percent", std.percent), divisor: read("divisor", std.divisor) }); await loadPayroll(); } catch (err) { alert(err.message); }
+    try {
+      const res = await api("setCleaning", { team, month, year, total: read("total", std.total), percent: read("percent", std.percent), divisor: read("divisor", std.divisor) });
+      await loadPayroll();
+      pyStatus("[data-clean-status]", team, res.verified !== false ? "Saved ✓" : "Not saved", res.verified !== false);
+      if (res.verified === false) alert(PY_NOT_KEPT);
+    } catch (err) { alert(err.message); }
   });
-  if (cr) withBtn(cr, async () => { try { await api("setCleaning", { team, month, year, reset: true }); await loadPayroll(); } catch (err) { alert(err.message); } });
+  if (cr) withBtn(cr, async () => {
+    try {
+      const res = await api("setCleaning", { team, month, year, reset: true });
+      await loadPayroll();
+      pyStatus("[data-clean-status]", team, res.verified !== false ? "Back to standard ✓" : "Not saved", res.verified !== false);
+      if (res.verified === false) alert(PY_NOT_KEPT);
+    } catch (err) { alert(err.message); }
+  });
   if (pr && payrolls[team]) printReport("pyPrint_" + team);
   if (conf) withBtn(conf, async () => {
     const P = payrolls[team];
@@ -2885,7 +2908,7 @@ $("schXlsWeekBtn").addEventListener("click", () => exportSchedule(schView === "w
 $("schXlsMonthBtn").addEventListener("click", () => exportSchedule("month"));
 
 // ---------- Backend status + email test (leaders) ----------
-function backendOk() { return backend.version !== undefined && backend.version >= 9; }
+function backendOk() { return backend.version !== undefined && backend.version >= 10; }
 function needBackend() {
   if (backendOk()) return true;
   alert("The backend is out of date. Paste the newest Code.gs into Apps Script, run authorize and setup, then Deploy > Manage deployments > New version. The Team tab explains it.");
