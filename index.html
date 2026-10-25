@@ -255,6 +255,24 @@
   .sch-print-table { border-collapse: collapse; width: 100%; margin-bottom: 14px; font-size: 11px; }
   .sch-print-table th, .sch-print-table td { border: 1px solid #999; padding: 4px 5px; text-align: center; }
   .sch-print-table th:first-child, .sch-print-table td:first-child { text-align: left; }
+  .py-partial { border-top: 1px solid var(--rule); padding-top: 12px; }
+  .py-partial-check { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+  .py-partial-check input { margin: 0; width: 16px; height: 16px; }
+  .py-days { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-top: 10px; }
+  .py-days-field { width: 150px; }
+  .py-days-field input { text-align: right; font-family: "IBM Plex Mono", monospace; }
+  .py-days-calc { flex: 1; min-width: 200px; background: #F1F3F6; border-radius: 4px; padding: 9px 12px; }
+  .py-calc { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 600; min-height: 16px; }
+  .py-partial + .py-grid { margin-top: 14px; }
+  .py-share { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--rule); margin-top: 14px; padding-top: 10px; font-size: 13px; }
+  .py-share > span:last-child { font-family: "IBM Plex Mono", monospace; }
+  .py-cleanbox { border: 1px solid #D8B45A; background: #FFFBF0; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; }
+  .py-clean-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px; }
+  .py-clean-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; margin-top: 12px; }
+  .py-clean-grid input { text-align: right; font-family: "IBM Plex Mono", monospace; font-size: 13px; padding: 9px 10px; }
+  .py-clean-result { border-top: 1px solid var(--rule); margin-top: 12px; padding-top: 10px; }
+  .py-clean-result .sub { font-size: 12px; color: #4A4A4A; margin-top: 4px; }
+  .py-clean-line { font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -778,7 +796,7 @@
 // CONFIGURE BEFORE UPLOADING: paste your Apps Script Web app URL
 // (Deploy > Manage deployments > Web app URL, ends in /exec).
 // ============================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwL3F_DBFL_Tp7n4GmrfcVDOaRkLnOTiI1Cjl0-OijKsf1Qn36RtRu8jRhPCRb2vWiLvg/exec";
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
 // ============================================================
 
 const TOKEN_KEY = "uf_hr_token_v1";
@@ -2043,7 +2061,7 @@ $("stHeadcountList").addEventListener("click", (e) => {
   if (b) saveSettings({ headcount: settings.headcount.filter((h) => h.from !== b.dataset.hc) });
 });
 
-// ---------- Payroll (leaders): one payroll per team (salary, hours, extras, bonus, reimbursements), in USD ----------
+// ---------- Payroll (leaders): one payroll per team (salary, hours, days worked, extras, bonus, reimbursements), in USD ----------
 const payrolls = {};           // team -> what the server returned for the selected month
 const TEAM_NAME = { support: "Support", sales: "Sales" };
 const num2 = (n) => (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -2065,6 +2083,16 @@ function pySubline(p) {
 function pyTeams() { return viewTeam === "all" ? ["support", "sales"] : [viewTeam]; }
 function pySection(team) { return document.querySelector(`#pyTeams .py-team[data-team="${team}"]`); }
 
+// The Sales cleaning subscription of a payroll; also for months confirmed before these values were saved.
+function cleaningOf(P) {
+  if (P.team !== "sales") return null;
+  if (P.cleaning) return P.cleaning;
+  const total = P.poolTotal || 0, percent = P.percent || 5, divisor = P.salesCount || 0, share = P.share || 0;
+  return { total, percent, divisor, pool: round2((total * percent) / 100), share, paidOut: round2(share * divisor), notDistributed: 0, edited: false, standard: { total, percent, divisor } };
+}
+const cleaningLine = (cl) => `${num2(cl.total)} × ${cl.percent}% ÷ ${cl.divisor} = ${fmtMoney(cl.share)} each`;
+const cleaningDetail = (cl, count) => `Pool ${fmtMoney(cl.pool)}. Paid to the ${count} Sales ${count === 1 ? "person" : "people"}: ${fmtMoney(cl.paidOut)}.${cl.notDistributed > 0.004 ? ` Not distributed: ${fmtMoney(cl.notDistributed)}.` : ""}`;
+
 async function loadPayroll() {
   if (!isLeader || !backendOk()) return;
   const { month, year } = pyMonthYear();
@@ -2079,13 +2107,14 @@ async function loadPayroll() {
 }
 
 function pyCardEdit(p, P) {
-  const uid = esc(p.userId);
+  const uid = esc(p.userId), dim = p.daysInMonth || 31, partial = p.daysWorked > 0;
   const chips = [];
   if (!p.hasSalary) chips.push(pyChip("Base salary not set yet", "bad"));
   if (!p.loggedAny) chips.push(pyChip(`Nothing logged for ${P.month}`, "bad"));
   if (p.edited) chips.push(pyChip("Edited by you", "warn"));
   else if (p.loggedAny) chips.push(pyChip("From member log", "ok"));
   if (p.bonus > 0) chips.push(pyChip("Bonus entered by you", "info"));
+  if (partial) chips.push(pyChip(`${p.daysWorked} of ${dim} days`, "info"));
   const field = (key, label, value, note, noteColor, bad) =>
     `<div class="py-field"><div class="py-label">${esc(label)}</div>
       <input type="number" step="0.01" min="0" data-uid="${uid}" data-f="${key}" value="${esc(value)}" aria-label="${esc(label)}: ${esc(p.name)}"${bad ? ' class="py-bad"' : ""}>
@@ -2093,15 +2122,24 @@ function pyCardEdit(p, P) {
   const logged = (k) => (p.edited && p.logged[k] !== p.fin[k] ? "logged " + fmtDays(p.logged[k]) : "");
   const AMBER = "#8A5A00";
   const fields = [
-    field("base", "Base salary (USD)", p.hasSalary ? p.base : "", p.hasSalary ? "since " + shortYm(p.since) : "not set", p.hasSalary ? "" : "var(--red)", !p.hasSalary),
+    field("base", "Base salary (monthly, full)", p.hasSalary ? p.base : "", p.hasSalary ? "since " + shortYm(p.since) : "not set", p.hasSalary ? "" : "var(--red)", !p.hasSalary),
     field("hours", "Hours per week", p.hoursPerWeek, p.since ? "since " + shortYm(p.since) : ""),
     field("extraDays", "Extra days", p.fin.extraDays, logged("extraDays"), AMBER),
     field("hours10", "Extra hours (1.0x)", p.fin.hours10, logged("hours10"), AMBER),
     field("hours15", "Extra hours (1.5x)", p.fin.hours15, logged("hours15"), AMBER),
     field("heroShift", "Hero Shifts", p.fin.heroShift, logged("heroShift"), AMBER),
+    field("bonus", "Bonus (USD)", p.bonus, ""),
   ];
-  if (p.team === "sales") fields.push(field("cleaningSold", "Cleaning sold (USD)", p.fin.cleaningSold, "team share"));
-  fields.push(field("bonus", "Bonus (USD)", p.bonus, ""));
+  const daysBlock = `<div class="py-partial">
+      <label class="py-partial-check"><input type="checkbox" data-partial="${uid}"${partial ? " checked" : ""} aria-label="Did not work the whole month: ${esc(p.name)}"><span>Did not work the whole month</span></label>
+      <div class="py-days${partial ? "" : " hidden"}" data-daysbox="${uid}">
+        <div class="py-days-field"><div class="py-label" style="min-height:0;">Days worked</div>
+          <input type="number" min="1" max="${dim}" step="1" data-uid="${uid}" data-f="daysWorked" value="${partial ? p.daysWorked : ""}" aria-label="Days worked: ${esc(p.name)}"></div>
+        <div class="py-days-calc"><div class="py-calc" data-calc="${uid}"></div><div class="xb-sub">Calendar days from the first to the last day worked, out of ${dim} in ${esc(P.month)}. The hourly rate for extras stays on the full salary.</div></div>
+      </div>
+    </div>`;
+  const cl = cleaningOf(P);
+  const share = p.team === "sales" ? `<div class="py-share"><span>Cleaning subscription share <span class="xb-sub">(from the team total above)</span></span><span data-share="${uid}">${num2(cl ? cl.share : 0)}</span></div>` : "";
   const reimb = p.reimbItems.length ? `<div class="py-reimb">
       <div class="py-reimb-head"><div class="xb-label">REIMBURSEMENTS TO INCLUDE</div><div class="py-reimb-total" data-reimbtotal="${uid}"></div></div>
       ${p.reimbItems.map((i) => `<label class="py-reimb-row"><input type="checkbox" data-reimb="${esc(i.id)}" data-uid="${uid}" data-usd="${i.amount}" data-ars="${i.amountArs || 0}"${i.included ? " checked" : ""} aria-label="Include ${esc(i.note || i.category)}"><span>${esc(fmtDate(i.purchaseDate))}</span><span>${esc(i.note || i.category)}${i.amountArs > 0 ? `<div class="xb-sub">${fmtArs(i.amountArs)}${i.rate > 0 ? " · rate " + fmtRate(i.rate) : ""}</div>` : ""}</span><span class="amount">${fmtMoney(i.amount)}</span></label>`).join("")}
@@ -2113,7 +2151,9 @@ function pyCardEdit(p, P) {
       <div><div class="py-total-label">TOTAL</div><div class="py-total-val" data-total="${uid}">${p.total === null ? "not set" : fmtMoney(p.total)}</div></div>
     </div>
     <div class="py-chips">${chips.join("")}</div>
+    ${daysBlock}
     <div class="py-grid">${fields.join("")}</div>
+    ${share}
     <div class="field-row" style="margin-top:12px;"><label for="bn_${uid}">Bonus note (optional)</label><input type="text" id="bn_${uid}" data-uid="${uid}" data-f="bonusNote" value="${esc(p.bonusNote)}"></div>
     ${reimb}
     <div class="actions" style="margin-top:12px;">
@@ -2128,7 +2168,7 @@ function pyCardView(p) {
   const add = (label, qty, amt) => lines.push(`<div class="py-line"><div>${esc(label)}</div><div class="py-qty">${esc(qty || "")}</div><div class="amount">${amt}</div></div>`);
   if (!p.hasSalary) add("Base salary not set", "", "—");
   else {
-    add("Base pay", "", num2(p.base));
+    add(p.daysWorked ? `Base pay (${p.daysWorked} of ${p.daysInMonth} days)` : "Base pay", "", num2(p.basePay !== undefined ? p.basePay : p.base));
     if (p.fin.extraDays) add("Extra days", `${fmtDays(p.fin.extraDays)} day${p.fin.extraDays === 1 ? "" : "s"}`, num2(p.pay.days));
     if (p.fin.hours10) add("Extra hours (1.0x)", `${fmtDays(p.fin.hours10)} h`, num2(p.pay.h10));
     if (p.fin.hours15) add("Extra hours (1.5x)", `${fmtDays(p.fin.hours15)} h`, num2(p.pay.h15));
@@ -2147,11 +2187,11 @@ function pyCardView(p) {
 }
 
 function pyPrintHtml(P) {
-  const confirmed = P.status === "confirmed";
+  const confirmed = P.status === "confirmed", cl = cleaningOf(P);
   return `<div class="report-head"><p class="section-label" style="margin:0;">PAYROLL — ${esc(TEAM_NAME[P.team].toUpperCase())} — ${esc(P.month)} ${esc(P.year)} (${confirmed ? "CONFIRMED" : "DRAFT"}, CONFIDENTIAL, USD)</p></div>`
     + P.people.map(pyCardView).join("")
     + `<div class="py-total"><div>Total payroll ${esc(TEAM_NAME[P.team])}, ${P.people.length} people</div><div>${fmtMoney(P.totalSoFar)}</div></div>`
-    + (P.team === "sales" ? `<p class="report-note">Cleaning subscription (Sales): ${fmtMoney(P.poolTotal)} sold · ${P.percent}% pool ${fmtMoney((P.poolTotal * P.percent) / 100)} · ${P.salesCount} Sales people · ${fmtMoney(P.share)} each.</p>` : "");
+    + (cl ? `<p class="report-note">Cleaning subscription (Sales): ${fmtMoney(cl.total)} sold · ${cl.percent}% pool ${fmtMoney(cl.pool)} · split between ${cl.divisor} · ${fmtMoney(cl.share)} each.</p>` : "");
 }
 
 function pySectionHtml(team) {
@@ -2161,6 +2201,7 @@ function pySectionHtml(team) {
       <div class="actions"><button class="btn ghost small hidden py-reopen">Reopen month</button><button class="btn ghost small py-print">Print</button></div>
     </div>
     <div class="admin-note py-banner"></div>
+    ${team === "sales" ? '<div class="py-clean"></div>' : ""}
     <div class="py-cards"></div>
     <div class="py-total"><div class="py-bar-label"></div><div class="py-bar-value"></div></div>
     <button class="btn py-confirm">Confirm payroll</button>
@@ -2196,6 +2237,29 @@ function fillPayrollSection(team) {
     });
     banner.innerHTML = issues.length ? `<strong>${issues.length} thing${issues.length === 1 ? "" : "s"} need a look.</strong> ${esc(issues.join("; "))}. Extras start from what members logged in Log Extras. Anything you change is final and the member's own log is not altered.` : "Extras start from what members logged in Log Extras. Anything you change is final and the member's own log is not altered.";
   }
+  // the Sales cleaning subscription: the team total, the percentage and who it is split between
+  const box = q(".py-clean"), cl = cleaningOf(P);
+  if (box && cl) {
+    const cf = (key, label, value, differs, note) => `<div class="py-field"><div class="py-label">${esc(label)}</div>
+        <input type="number" step="any" min="0" data-clean="${key}" value="${esc(value)}" aria-label="${esc(label)}">
+        <div class="py-note"><span style="color:${differs ? "#8A5A00" : "var(--muted)"}">${esc(note)}</span></div></div>`;
+    box.innerHTML = confirmed
+      ? `<div class="py-cleanbox"><div class="xb-label">CLEANING SUBSCRIPTION (SALES)</div><div class="py-clean-result" style="border-top:none;margin-top:6px;padding-top:0;"><div class="py-clean-line">${esc(cleaningLine(cl))}</div><div class="sub">${esc(cleaningDetail(cl, P.salesCount))}</div></div></div>`
+      : `<div class="py-cleanbox">
+          <div class="py-clean-head"><div class="xb-label">CLEANING SUBSCRIPTION (SALES)</div>${cl.edited ? pyChip("Edited by you", "warn") : pyChip("Standard values", "ok")}</div>
+          <div class="py-clean-grid">
+            ${cf("total", "Total sold, team (USD)", cl.total.toFixed(2), cl.total !== cl.standard.total, `standard ${num2(cl.standard.total)} (logged)`)}
+            ${cf("percent", "Percentage", cl.percent, cl.percent !== cl.standard.percent, `standard ${cl.standard.percent}%`)}
+            ${cf("divisor", "Divide between", cl.divisor, cl.divisor !== cl.standard.divisor, `standard ${cl.standard.divisor} (Sales people)`)}
+          </div>
+          <div class="py-clean-result">
+            <div class="py-clean-line" data-clean-line>${esc(cleaningLine(cl))}</div>
+            <div class="sub" data-clean-detail>${esc(cleaningDetail(cl, P.salesCount))}</div>
+            <div class="sub">The total starts as what Sales logged in Log Extras. Everyone in Sales gets the same amount, whatever days they worked.</div>
+          </div>
+          <div class="actions" style="margin-top:10px;"><button class="btn small" data-clean-save>Save</button><button class="btn small ghost" data-clean-reset>Back to standard values</button></div>
+        </div>`;
+  }
   q(".py-cards").innerHTML = people.length ? people.map((p) => (confirmed ? pyCardView(p) : pyCardEdit(p, P))).join("") : '<p class="empty">Nobody on this team yet.</p>';
   q(".py-printview").innerHTML = pyPrintHtml(P);
   q(".py-bar-label").textContent = confirmed || !blocked.length ? `Total payroll ${TEAM_NAME[team]}, ${people.length} people` : `Total so far (${P.salaried} of ${people.length} salaries set)`;
@@ -2213,27 +2277,41 @@ function recalcPayroll(team) {
   const q = (uid, f) => sec.querySelector(`[data-uid="${uid}"][data-f="${f}"]`);
   const val = (uid, f) => { const el = q(uid, f); return el ? parseFloat(el.value) || 0 : 0; };
   const set = (sel, text) => { const el = sec.querySelector(sel); if (el) el.textContent = text; };
-  const sales = P.people.filter((p) => p.team === "sales");
-  const pool = sales.reduce((s, p) => s + val(p.userId, "cleaningSold"), 0);
-  const share = sales.length ? round2((pool * P.percent) / 100 / sales.length) : 0;
+  const count = P.people.length, cl = cleaningOf(P);
+  let share = 0;
+  if (cl) {
+    const std = cl.standard, num = (k, d) => { const el = sec.querySelector(`[data-clean="${k}"]`); const v = el ? parseFloat(el.value) : NaN; return isNaN(v) ? d : v; };
+    const total = num("total", std.total), pct = num("percent", std.percent), div = Math.floor(num("divisor", std.divisor));
+    const pool = round2((total * pct) / 100);
+    share = count && div > 0 ? round2(pool / div) : 0;
+    const live = { total, percent: pct, divisor: div, pool, share, paidOut: round2(share * count), notDistributed: round2(pool - share * count) };
+    set("[data-clean-line]", cleaningLine(live));
+    set("[data-clean-detail]", cleaningDetail(live, count));
+  }
   let sum = 0;
   P.people.forEach((p) => {
-    const uid = p.userId, base = val(uid, "base"), hours = val(uid, "hours") || 40;
+    const uid = p.userId, base = val(uid, "base"), hours = val(uid, "hours") || 40, dim = p.daysInMonth || 31;
     const pay = (key, v) => set(`[data-pay="${uid}:${key}"]`, v ? num2(v) : "");
     const boxes = [...sec.querySelectorAll(`[data-reimb][data-uid="${uid}"]`)].filter((c) => c.checked);
     const rUsd = round2(boxes.reduce((s, c) => s + parseFloat(c.dataset.usd), 0)), rArs = round2(boxes.reduce((s, c) => s + parseFloat(c.dataset.ars), 0));
     set(`[data-reimbtotal="${uid}"]`, `${fmtMoney(rUsd)} · ${fmtArs(rArs)}`);
+    if (p.team === "sales") set(`[data-share="${uid}"]`, num2(share));
+    const chk = sec.querySelector(`[data-partial="${uid}"]`);
+    const d = chk && chk.checked ? Math.floor(val(uid, "daysWorked")) : 0;
+    const part = d > 0 && d < dim;
     if (!(base > 0)) {
-      ["extraDays", "hours10", "hours15", "heroShift", "cleaningSold", "bonus"].forEach((k) => pay(k, 0));
+      ["extraDays", "hours10", "hours15", "heroShift", "bonus"].forEach((k) => pay(k, 0));
       set(`[data-total="${uid}"]`, "not set");
+      set(`[data-calc="${uid}"]`, "");
       set(`[data-sub="${uid}"]`, `${roleLabel(p)}${hours !== 40 ? " · " + hours + " h/week" : ""} · rate needs a salary`);
       return;
     }
-    const rate = rateOf(base, hours);
+    const rate = rateOf(base, hours), basePay = part ? round2((base * d) / dim) : base;
+    set(`[data-calc="${uid}"]`, part ? `${num2(base)} × ${d}/${dim} = ${num2(basePay)}` : chk && chk.checked ? "Enter the days worked" : "");
     const days = round2(val(uid, "extraDays") * 8 * rate), h10 = round2(val(uid, "hours10") * rate), h15 = round2(val(uid, "hours15") * rate * 1.5);
     const hero = round2(val(uid, "heroShift") * 8 * rate * 1.5), bonus = round2(val(uid, "bonus")), cleaning = p.team === "sales" ? share : 0;
-    pay("extraDays", days); pay("hours10", h10); pay("hours15", h15); pay("heroShift", hero); pay("cleaningSold", cleaning); pay("bonus", bonus);
-    const total = round2(base + days + h10 + h15 + hero + cleaning + bonus + rUsd);
+    pay("extraDays", days); pay("hours10", h10); pay("hours15", h15); pay("heroShift", hero); pay("bonus", bonus);
+    const total = round2(basePay + days + h10 + h15 + hero + cleaning + bonus + rUsd);
     set(`[data-total="${uid}"]`, fmtMoney(total));
     set(`[data-sub="${uid}"]`, `${roleLabel(p)}${hours !== 40 ? " · " + hours + " h/week" : ""} · $${num2(round2(rate))}/h`);
     sum += total;
@@ -2246,6 +2324,12 @@ async function pySave(team, uid, btn) {
   const p = P.people.find((x) => x.userId === uid);
   const { month, year } = pyMonthYear();
   const get = (f) => { const el = sec.querySelector(`[data-uid="${uid}"][data-f="${f}"]`); return el ? el.value : undefined; };
+  const chk = sec.querySelector(`[data-partial="${uid}"]`);
+  let daysWorked = 0;
+  if (chk && chk.checked) {
+    daysWorked = Math.floor(parseFloat(get("daysWorked")) || 0);
+    if (daysWorked < 1) { alert("Enter the days worked, or untick the box."); return; }
+  }
   await withBtn(btn, async () => {
     try {
       const base = parseFloat(get("base")), hours = parseFloat(get("hours"));
@@ -2259,17 +2343,25 @@ async function pySave(team, uid, btn) {
         await api("setSalary", payload);
       }
       const nums = {};
-      ["extraDays", "hours10", "hours15", "heroShift", "cleaningSold", "bonus"].forEach((k) => { nums[k] = parseFloat(get(k)) || 0; });
+      ["extraDays", "hours10", "hours15", "heroShift", "bonus"].forEach((k) => { nums[k] = parseFloat(get(k)) || 0; });
+      nums.cleaningSold = p.fin.cleaningSold;      // not edited here: the Sales total comes from what Sales logged
       const note = get("bonusNote") || "";
-      const changed = ["extraDays", "hours10", "hours15", "heroShift", "cleaningSold"].some((k) => nums[k] !== p.fin[k]) || nums.bonus !== p.bonus || note !== p.bonusNote;
-      if (changed) await api("setPayroll", Object.assign({ userId: uid, month, year, bonusNote: note }, nums));
+      const changed = ["extraDays", "hours10", "hours15", "heroShift"].some((k) => nums[k] !== p.fin[k]) || nums.bonus !== p.bonus || note !== p.bonusNote || daysWorked !== p.daysWorked;
+      if (changed) await api("setPayroll", Object.assign({ userId: uid, month, year, bonusNote: note, daysWorked }, nums));
       await loadPayroll();
     } catch (e) { alert(e.message); }
   });
 }
 const pyTeamOf = (el) => { const s = el.closest(".py-team"); return s ? s.dataset.team : null; };
-$("pyTeams").addEventListener("input", (e) => { if (e.target.matches("[data-f]")) recalcPayroll(pyTeamOf(e.target)); });
+$("pyTeams").addEventListener("input", (e) => { if (e.target.matches("[data-f], [data-clean]")) recalcPayroll(pyTeamOf(e.target)); });
 $("pyTeams").addEventListener("change", async (e) => {
+  if (e.target.matches("[data-partial]")) {
+    const box = e.target.closest(".py-card").querySelector(`[data-daysbox="${e.target.dataset.partial}"]`);
+    box.classList.toggle("hidden", !e.target.checked);
+    if (e.target.checked) box.querySelector("input").focus();
+    recalcPayroll(pyTeamOf(e.target));
+    return;
+  }
   if (!e.target.matches("[data-reimb]")) return;
   const team = pyTeamOf(e.target), sec = pySection(team), { month, year } = pyMonthYear();
   const ids = [...sec.querySelectorAll("[data-reimb]")].filter((c) => !c.checked).map((c) => c.dataset.reimb);
@@ -2278,14 +2370,22 @@ $("pyTeams").addEventListener("change", async (e) => {
 $("pyTeams").addEventListener("click", (e) => {
   const team = pyTeamOf(e.target);
   if (!team) return;
+  const sec = pySection(team);
   const s = e.target.closest("[data-save]"), r = e.target.closest("[data-reset]");
   const conf = e.target.closest(".py-confirm"), reo = e.target.closest(".py-reopen"), pr = e.target.closest(".py-print");
+  const cs = e.target.closest("[data-clean-save]"), cr = e.target.closest("[data-clean-reset]");
   const { month, year } = pyMonthYear();
   if (s) pySave(team, s.dataset.save, s);
   if (r) {
     if (!confirm("Go back to what the member logged for this month?")) return;
     withBtn(r, async () => { try { await api("clearPayroll", { userId: r.dataset.reset, month, year }); await loadPayroll(); } catch (err) { alert(err.message); } });
   }
+  if (cs) withBtn(cs, async () => {
+    const std = cleaningOf(payrolls[team]).standard;
+    const read = (k, standard) => { const v = sec.querySelector(`[data-clean="${k}"]`).value.trim(); return v === "" || Number(v) === standard ? "" : v; };   // equal to the standard = keep following it
+    try { await api("setCleaning", { team, month, year, total: read("total", std.total), percent: read("percent", std.percent), divisor: read("divisor", std.divisor) }); await loadPayroll(); } catch (err) { alert(err.message); }
+  });
+  if (cr) withBtn(cr, async () => { try { await api("setCleaning", { team, month, year, reset: true }); await loadPayroll(); } catch (err) { alert(err.message); } });
   if (pr && payrolls[team]) printReport("pyPrint_" + team);
   if (conf) withBtn(conf, async () => {
     const P = payrolls[team];
@@ -2785,7 +2885,7 @@ $("schXlsWeekBtn").addEventListener("click", () => exportSchedule(schView === "w
 $("schXlsMonthBtn").addEventListener("click", () => exportSchedule("month"));
 
 // ---------- Backend status + email test (leaders) ----------
-function backendOk() { return backend.version !== undefined && backend.version >= 8; }
+function backendOk() { return backend.version !== undefined && backend.version >= 9; }
 function needBackend() {
   if (backendOk()) return true;
   alert("The backend is out of date. Paste the newest Code.gs into Apps Script, run authorize and setup, then Deploy > Manage deployments > New version. The Team tab explains it.");
